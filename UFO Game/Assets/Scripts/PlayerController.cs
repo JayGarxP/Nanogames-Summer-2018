@@ -6,23 +6,17 @@ using UnityEngine.UI;
 public class PlayerController : MonoBehaviour {
 
 	public float speed;        //Floating point variable to store the player's movement speed. //Makes cool toggle in inspector view UI lets you change this var
-    public float tiltspeed;
-    public float AccelerometerUpdateInterval = (float)(1.0 / 60.0);
-    public float LowPassKernelWidthSec = 1.0f;
-
-    private float LowPassFilterFactor;
-    private Vector2 LowPassValue;
-
-    private Rigidbody2D rb2d;       //Store a reference to the Rigidbody2D component required to use 2D Physics.
-
-    private int count; //objects picked up
 
     //TODO how make these Text a property instead of field
     //TODO: How to manage strings for UI and objects in Unity? XML? Serialiazables?
     // AND how set them programmatically, setting with the editor SUCKS
     public Text countText;          //Store a reference to the UI Text component which will display the number of pickups collected.
     public Text winText;            //Store a reference to the UI Text component which will display the 'You win' message.
+    public Text touchCountText;
 
+    private Rigidbody2D rb2d;       //Store a reference to the Rigidbody2D component required to use 2D Physics.
+
+    private int count; //objects picked up
 
     // Use this for initialization
     void Start()
@@ -43,6 +37,12 @@ public class PlayerController : MonoBehaviour {
     {
         //rb2d.AddForce(LowPassValue * tiltspeed);
     }
+
+    void Update()
+    {
+        touchCountText.text = HelperClassTest.UpdateTextField("touchCount: ", Input.touchCount);
+    }
+
 
     //OnTriggerEnter2D is called whenever this object overlaps with a trigger collider.
     void OnTriggerEnter2D(Collider2D other)
