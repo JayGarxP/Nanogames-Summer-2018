@@ -41,6 +41,11 @@ public class PlayerController : MonoBehaviour {
     void Update()
     {
         touchCountText.text = HelperClassTest.UpdateTextField("touchCount: ", Input.touchCount);
+        //perforce test auto-checkout file WORKS
+        //Test perforce from within UNITY auto-checkout DOES NOT WORK!!!!
+        //Sadly will have to use P4V since the integrated unity tool does not work for crap.
+
+
     }
 
 
