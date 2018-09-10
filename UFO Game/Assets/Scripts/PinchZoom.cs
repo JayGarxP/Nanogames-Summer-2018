@@ -7,6 +7,8 @@ public class PinchZoom : MonoBehaviour
 
     public float perspectiveZoomSpeed = 0.5f;        // The rate of change of the field of view in perspective mode.
     public float orthoZoomSpeed = 0.5f;        // The rate of change of the orthographic size in orthographic mode.
+    public float zoomDeadzoneFloor = 2.0f;
+    //TODO: zoomDeadzoneCeiling; use in same way.
 
 
     private bool camerIsOrtho;
@@ -42,10 +44,12 @@ public class PinchZoom : MonoBehaviour
             float deltaMagnitudeDiff = prevTouchDeltaMag - touchDeltaMag;
 
             // If the camera is orthographic...
-            if (camerIsOrtho)
+            if (camerIsOrtho   &&   Mathf.Abs(deltaMagnitudeDiff) > zoomDeadzoneFloor)
             {
                 // ... change the orthographic size based on the change in distance between the touches.
-                zoomCamera.orthographicSize += deltaMagnitudeDiff * orthoZoomSpeed;
+                float fingerSpreadAcc = deltaMagnitudeDiff * orthoZoomSpeed;
+
+                zoomCamera.orthographicSize += fingerSpreadAcc; 
 
                 // Make sure the orthographic size never drops below zero.
                 zoomCamera.orthographicSize = Mathf.Max(zoomCamera.orthographicSize, 0.1f);
