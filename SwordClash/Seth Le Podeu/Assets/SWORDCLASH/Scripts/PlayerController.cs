@@ -1,47 +1,66 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using DigitalRubyShared; //FingersLite
+using System;
 
-public class PlayerController : MonoBehaviour
+namespace SwordClash
 {
-    #region EDITOR_FIELDS
-    
-    #endregion
-
-    // Use this for initialization
-    void Start()
+    public class PlayerController : MonoBehaviour
     {
+        #region EDITOR_FIELDS
+        public GameObject DotPrefab;
+        public Camera CameraReference;
+        #endregion
+        private TapGestureRecognizer tapGesture;
+
+        // Use this for initialization
+        void Start()
+        {
+            CreateTapGesture();
+
+        }
+
        
+        ////FixedUpdate is called at a fixed interval and is independent of frame rate. Put physics code here.
+        //void FixedUpdate()
+        //{
 
+        //}
+
+        void Update()
+        {
+
+
+
+        }
+
+        private void CreateTapGesture()
+        {
+            tapGesture = new TapGestureRecognizer();
+            tapGesture.StateUpdated += TapGestureCallback;
+            //tapGesture.RequireGestureRecognizerToFail = doubleTapGesture;
+            FingersScript.Instance.AddGesture(tapGesture);
+        }
+
+        private void TapGestureCallback(GestureRecognizer gesture)
+        {
+            if (gesture.State == GestureRecognizerState.Ended)
+            {
+
+                Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
+                SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
+            }
+        }
+
+
+        private void SpawnDot(float xCoordDot, float yCoordDot)
+        {
+            //Why this not instantiating at top of scene where it should be???
+            GameObject dot = Instantiate(DotPrefab) as GameObject;
+            dot.transform.position = new Vector2(xCoordDot, yCoordDot);
+
+        }
+
+    
     }
-
-    ////FixedUpdate is called at a fixed interval and is independent of frame rate. Put physics code here.
-    //void FixedUpdate()
-    //{
-        
-    //}
-
-    void Update()
-    {
-        
-
-
-    }
-
-
-    ////OnTriggerEnter2D is called whenever this object overlaps with a trigger collider.
-    //void OnTriggerEnter2D(Collider2D other)
-    //{
-    //    //Check the provided Collider2D parameter other to see if it is tagged "PickUp", if it is...
-    //    if (other.gameObject.CompareTag("PickUp"))
-    //    {
-    //        other.gameObject.SetActive(false);
-    //        count += 1;
-    //        //TODO: Can I group UI elements together, score being Count and a num value tied to actual score?
-    //        countText.text = HelperClassTest.UpdateTextField("Count: ", count);
-
-    //        if (count >= 2)
-    //            //... then set the text property of our winText object to "You win!"
-    //            winText.text = "You win YEET!";
-    //    }
-    //}
 }
