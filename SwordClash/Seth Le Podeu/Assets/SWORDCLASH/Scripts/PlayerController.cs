@@ -18,7 +18,6 @@ namespace SwordClash
         private SwipeGestureRecognizer rightSwipeGesture;
         private SwipeGestureRecognizer downSwipeGesture;
 
-
         // Use this for initialization
         void Start()
         {
@@ -39,6 +38,16 @@ namespace SwordClash
 
         }
 
+
+        private void CreateSwipeGestures()
+        {
+            CreateUpSwipeGesture();
+            CreateDownSwipeGesture();
+            CreateLeftSwipeGesture();
+            CreateRightSwipeGesture();
+
+        }
+
         private void CreateTapGesture()
         {
             tapGesture = new TapGestureRecognizer();
@@ -53,13 +62,7 @@ namespace SwordClash
             {
                 Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
                 SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
-            }
-        }
-
-        private void CreateSwipeGestures()
-        {
-            CreateUpSwipeGesture();
-           
+             }
         }
 
         private void CreateUpSwipeGesture()
@@ -76,11 +79,64 @@ namespace SwordClash
             if (gesture.State == GestureRecognizerState.Ended)
             {
                 //TODO: use gesture.Properties to actually launch projectile with path
-                FlickTentacle(gesture.FocusX, gesture.FocusY);
+                FlickTentacle(gesture.FocusX, gesture.FocusY, DotController.swipeEvent.UpSwipe);
             }
         }
 
-        private void FlickTentacle(float endX, float endY)
+        private void CreateRightSwipeGesture()
+        {
+            CreateDotSwipeGesture(rightSwipeGesture, SwipeGestureRecognizerDirection.Right, SwipeGestureCallback_RIGHT);
+        }
+
+        private void CreateLeftSwipeGesture()
+        {
+            CreateDotSwipeGesture(leftSwipeGesture, SwipeGestureRecognizerDirection.Left, SwipeGestureCallback_LEFT);
+        }
+
+        private void CreateDownSwipeGesture()
+        {
+            CreateDotSwipeGesture(downSwipeGesture, SwipeGestureRecognizerDirection.Down, SwipeGestureCallback_DOWN);
+        }
+
+        private void SwipeGestureCallback_DOWN(GestureRecognizer gesture)
+        {
+            if (gesture.State == GestureRecognizerState.Ended)
+            {
+                //TODO: use gesture.Properties to actually launch projectile with path
+                FlickTentacle(gesture.FocusX, gesture.FocusY, DotController.swipeEvent.DownSwipe);
+            }
+        }
+
+        private void SwipeGestureCallback_LEFT(GestureRecognizer gesture)
+        {
+            if (gesture.State == GestureRecognizerState.Ended)
+            {
+                //TODO: use gesture.Properties to actually launch projectile with path
+                FlickTentacle(gesture.FocusX, gesture.FocusY, DotController.swipeEvent.LeftSwipe);
+            }
+        }
+
+        private void SwipeGestureCallback_RIGHT(GestureRecognizer gesture)
+        {
+            if (gesture.State == GestureRecognizerState.Ended)
+            {
+                //TODO: use gesture.Properties to actually launch projectile with path
+                FlickTentacle(gesture.FocusX, gesture.FocusY, DotController.swipeEvent.RightSwipe);
+            }
+        }
+
+        private void CreateDotSwipeGesture(SwipeGestureRecognizer whichSwipe, SwipeGestureRecognizerDirection direction, GestureRecognizerStateUpdatedDelegate GestureCallback)
+        {
+            whichSwipe = new SwipeGestureRecognizer();
+            whichSwipe.Direction = direction;
+            whichSwipe.StateUpdated += GestureCallback;
+            whichSwipe.DirectionThreshold = 1.0f; // allow a swipe, regardless of slope
+            FingersScript.Instance.AddGesture(whichSwipe);
+        }
+
+
+
+        private void FlickTentacle(float endX, float endY, DotController.swipeEvent swipeKind)
         {
             //For now, just change color of dot that was flicked
             //ray cast; hit; hit.rigidboy add force OR change sprite
@@ -117,13 +173,16 @@ namespace SwordClash
             {
                 foreach (var dot in hitDots)
                 {
-                    dot.rigidbody.AddForceAtPosition(heading * 1000, dot.point);
+                    DotController swipedDot = dot.collider.GetComponent<DotController>();
+                    swipedDot.OnSwipe(swipeKind);
+                    dot.rigidbody.AddForceAtPosition(heading * 100, dot.point);
                 }
             }
         }
 
         private void SpawnDot(float xCoordDot, float yCoordDot)
         {
+            //TODO: count dots in scene to set max first, make that a public field
             GameObject dot = Instantiate(DotPrefab) as GameObject;
             dot.transform.position = new Vector2(xCoordDot, yCoordDot);
 
