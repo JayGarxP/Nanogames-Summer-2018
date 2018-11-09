@@ -70,7 +70,7 @@ namespace SwordClash
             upSwipeGesture = new SwipeGestureRecognizer();
             upSwipeGesture.Direction = SwipeGestureRecognizerDirection.Up;
             upSwipeGesture.StateUpdated += SwipeGestureCallback_UP;
-            upSwipeGesture.DirectionThreshold = 1.0f; // allow a swipe, regardless of slope
+            upSwipeGesture.DirectionThreshold = 1.5f; // 1.5* greater y axis movement
             FingersScript.Instance.AddGesture(upSwipeGesture);
         }
 
@@ -79,7 +79,7 @@ namespace SwordClash
             if (gesture.State == GestureRecognizerState.Ended)
             {
                 //TODO: use gesture.Properties to actually launch projectile with path
-                FlickTentacle(gesture.FocusX, gesture.FocusY, DotController.swipeEvent.UpSwipe);
+                FlickTentacle(gesture as SwipeGestureRecognizer);
             }
         }
 
@@ -102,8 +102,7 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                //TODO: use gesture.Properties to actually launch projectile with path
-                FlickTentacle(gesture.FocusX, gesture.FocusY, DotController.swipeEvent.DownSwipe);
+                FlickTentacle(gesture as SwipeGestureRecognizer);
             }
         }
 
@@ -111,8 +110,8 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                //TODO: use gesture.Properties to actually launch projectile with path
-                FlickTentacle(gesture.FocusX, gesture.FocusY, DotController.swipeEvent.LeftSwipe);
+                FlickTentacle(gesture as SwipeGestureRecognizer);
+
             }
         }
 
@@ -120,8 +119,8 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                //TODO: use gesture.Properties to actually launch projectile with path
-                FlickTentacle(gesture.FocusX, gesture.FocusY, DotController.swipeEvent.RightSwipe);
+                FlickTentacle(gesture as SwipeGestureRecognizer);
+
             }
         }
 
@@ -130,30 +129,30 @@ namespace SwordClash
             whichSwipe = new SwipeGestureRecognizer();
             whichSwipe.Direction = direction;
             whichSwipe.StateUpdated += GestureCallback;
-            whichSwipe.DirectionThreshold = 1.0f; // allow a swipe, regardless of slope
+            whichSwipe.DirectionThreshold = 1.5f;
             FingersScript.Instance.AddGesture(whichSwipe);
         }
 
-
-
-        private void FlickTentacle(float endX, float endY, DotController.swipeEvent swipeKind)
+        private void FlickTentacle(SwipeGestureRecognizer swipeGesture)
         {
-            //For now, just change color of dot that was flicked
-            //ray cast; hit; hit.rigidboy add force OR change sprite
-            Vector2 flickStart = new Vector2(upSwipeGesture.StartFocusX, upSwipeGesture.StartFocusY);
+            Vector2 velocityPixels = new Vector2(swipeGesture.VelocityX, swipeGesture.VelocityY);
+
+            Vector2 flickStart = new Vector2(swipeGesture.StartFocusX, swipeGesture.StartFocusY);
 
             Vector3 flickStartWORLD = CameraReference.ScreenToWorldPoint(flickStart);
             //Building start and ends of swipe, need to convert to world coordinates though
-            Vector3 flickEndWORLD = CameraReference.ScreenToWorldPoint(new Vector2(endX, endY));
+            Vector3 flickEndWORLD = CameraReference.ScreenToWorldPoint(new Vector2(swipeGesture.DistanceX, swipeGesture.DistanceY));
 
-            //float swipeDistance = Vector3.Distance(flickStartWORLDCoords, flickEndWORLDCoords);
-            //Vector2 flickDirection = f
+            flickStartWORLD.z = 0.0f;
+            flickEndWORLD.z = 0.0f; //zero out z values just in case
 
 
             var heading = flickEndWORLD - flickStartWORLD;
             var swipeDistance = heading.magnitude;
             var swipeDirection = heading / swipeDistance; // This is now the normalized direction, unit, magnitude == 1.
 
+            //Vector2 forceofSwipe = new Vector2(heading.x, heading.y);
+            Vector2 forceofSwipe = CameraReference.ScreenToWorldPoint(velocityPixels);
 
             //should world coords .z be set to 0.0f????
 
@@ -174,11 +173,14 @@ namespace SwordClash
                 foreach (var dot in hitDots)
                 {
                     DotController swipedDot = dot.collider.GetComponent<DotController>();
-                    swipedDot.OnSwipe(swipeKind);
-                    dot.rigidbody.AddForceAtPosition(heading * 100, dot.point);
+                    swipedDot.OnSwipe(swipeGesture.Direction);
+                    dot.rigidbody.AddForce(forceofSwipe / 2, ForceMode2D.Impulse);
                 }
             }
         }
+
+
+     
 
         private void SpawnDot(float xCoordDot, float yCoordDot)
         {

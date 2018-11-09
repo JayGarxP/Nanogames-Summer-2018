@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DigitalRubyShared;
 
 namespace SwordClash
 {
@@ -8,8 +9,6 @@ namespace SwordClash
     {
 
         public SpriteRenderer m_SpriteRenderer;
-
-        public enum swipeEvent { UpSwipe, DownSwipe, LeftSwipe, RightSwipe };
 
         // Use this for initialization
         void Start()
@@ -24,26 +23,26 @@ namespace SwordClash
 
         }
 
-        public void OnSwipe(swipeEvent whichSwipe)
+        public void OnSwipe(SwipeGestureRecognizerDirection whichSwipe)
         {
             switch (whichSwipe)
             {
-                case swipeEvent.UpSwipe:
+                case SwipeGestureRecognizerDirection.Up:
                     {
                         OnUpSwiped();
                         break;
                     }
-                case swipeEvent.DownSwipe:
+                case SwipeGestureRecognizerDirection.Down:
                     {
                         OnDownSwiped();
                         break;
                     }
-                case swipeEvent.LeftSwipe:
+                case SwipeGestureRecognizerDirection.Left:
                     {
                         OnLeftSwiped();
                         break;
                     }
-                case swipeEvent.RightSwipe:
+                case SwipeGestureRecognizerDirection.Right:
                     {
                         OnRightSwiped();
                         break;
