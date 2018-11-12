@@ -98,11 +98,11 @@ namespace SwordClash
                 Vector2 velocityPixels = new Vector2(gesture.VelocityX, gesture.VelocityY);
                 Vector2 forceofSwipe = CameraReference.ScreenToWorldPoint(velocityPixels);
 
+                //Have to apply smoothing; floor; ceiling; and implement extension length...
                 //TODO: Kinematic vs Dynamic for projectiles what the fuck... Fixed Update vs normal update WTF...
                 tentaController.MovePositionVelocity_TT = forceofSwipe;
 
-                //LaunchTentacle(maxTentacleLength, direction, speed); //need to look up how to do projectiles in Unity
-                //FlickTentacle(gesture as SwipeGestureRecognizer);
+                FlickTentacle(gesture as SwipeGestureRecognizer);
             }
         }
 
