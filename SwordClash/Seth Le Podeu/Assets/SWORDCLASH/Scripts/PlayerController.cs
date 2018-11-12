@@ -11,6 +11,8 @@ namespace SwordClash
         public GameObject DotPrefab;
         public Camera CameraReference;
         public float swipeCircleRayCastRadius; //~10.0f
+       
+        public GameObject LeftTentacle;
         #endregion
         private TapGestureRecognizer tapGesture;
         private SwipeGestureRecognizer upSwipeGesture;
@@ -18,25 +20,34 @@ namespace SwordClash
         private SwipeGestureRecognizer rightSwipeGesture;
         private SwipeGestureRecognizer downSwipeGesture;
 
+        private short dotCount;
+        private TentacleController tentaController;
+        
+
         // Use this for initialization
         void Start()
         {
             CreateTapGesture();
             CreateSwipeGestures();
-        }
+            dotCount = 0;
 
-        ////FixedUpdate is called at a fixed interval and is independent of frame rate. Put physics code here.
-        //void FixedUpdate()
-        //{
-
-        //}
-
-        void Update()
-        {
-
-
+                    
+            tentaController = LeftTentacle.GetComponent<TentacleController>(); //how check if null???
 
         }
+
+    ////FixedUpdate is called at a fixed interval and is independent of frame rate. Put physics code here.
+    //void FixedUpdate()
+    //{
+
+    //}
+
+    //void Update()
+    //    {
+
+
+
+    //    }
 
 
         private void CreateSwipeGestures()
@@ -60,8 +71,12 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
-                SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
+                if (dotCount < 4)
+                {
+                    Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
+                    SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
+                    dotCount++;
+                }
              }
         }
 
@@ -79,7 +94,15 @@ namespace SwordClash
             if (gesture.State == GestureRecognizerState.Ended)
             {
                 //TODO: use gesture.Properties to actually launch projectile with path
-                FlickTentacle(gesture as SwipeGestureRecognizer);
+
+                Vector2 velocityPixels = new Vector2(gesture.VelocityX, gesture.VelocityY);
+                Vector2 forceofSwipe = CameraReference.ScreenToWorldPoint(velocityPixels);
+
+                //TODO: Kinematic vs Dynamic for projectiles what the fuck... Fixed Update vs normal update WTF...
+                tentaController.MovePositionVelocity_TT = forceofSwipe;
+
+                //LaunchTentacle(maxTentacleLength, direction, speed); //need to look up how to do projectiles in Unity
+                //FlickTentacle(gesture as SwipeGestureRecognizer);
             }
         }
 
@@ -141,7 +164,7 @@ namespace SwordClash
 
             Vector3 flickStartWORLD = CameraReference.ScreenToWorldPoint(flickStart);
             //Building start and ends of swipe, need to convert to world coordinates though
-            Vector3 flickEndWORLD = CameraReference.ScreenToWorldPoint(new Vector2(swipeGesture.DistanceX, swipeGesture.DistanceY));
+            Vector3 flickEndWORLD = CameraReference.ScreenToWorldPoint(new Vector2(swipeGesture.FocusX, swipeGesture.FocusY));
 
             flickStartWORLD.z = 0.0f;
             flickEndWORLD.z = 0.0f; //zero out z values just in case
@@ -173,8 +196,11 @@ namespace SwordClash
                 foreach (var dot in hitDots)
                 {
                     DotController swipedDot = dot.collider.GetComponent<DotController>();
-                    swipedDot.OnSwipe(swipeGesture.Direction);
-                    dot.rigidbody.AddForce(forceofSwipe / 2, ForceMode2D.Impulse);
+                    if (swipedDot != null) //TODO: why does raycast hit everything WTF!!!!
+                    {
+                        swipedDot.OnSwipe(swipeGesture.Direction);
+                        dot.rigidbody.AddForce(forceofSwipe / 2, ForceMode2D.Impulse);
+                    }
                 }
             }
         }
