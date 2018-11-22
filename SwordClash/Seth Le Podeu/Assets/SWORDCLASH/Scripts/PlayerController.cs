@@ -8,9 +8,13 @@ namespace SwordClash
     public class PlayerController : MonoBehaviour
     {
         #region EDITOR_FIELDS
+        public float swipeCircleRayCastRadius; //~10.0f
+        public float swipeVelocityDividend; //divides swipe velocity to slow it down.
+        //TODO: need more fine-grained control than just dividend, need clamp and smoothing + better gesture properties to not have deadzones!
+
         public GameObject DotPrefab;
         public Camera CameraReference;
-        public float swipeCircleRayCastRadius; //~10.0f
+        public Text SwipeAngleText;
        
         public GameObject LeftTentacle;
         #endregion
@@ -22,6 +26,9 @@ namespace SwordClash
 
         private short dotCount;
         private TentacleController tentaController;
+        private Vector2 tentacleTipStartPosition;
+
+        private string swipeAngleTextString;
         
 
         // Use this for initialization
@@ -30,24 +37,25 @@ namespace SwordClash
             CreateTapGesture();
             CreateSwipeGestures();
             dotCount = 0;
+            swipeAngleTextString = SwipeAngleText.text;
 
-                    
             tentaController = LeftTentacle.GetComponent<TentacleController>(); //how check if null???
+           tentacleTipStartPosition = tentaController.GetComponent<Rigidbody2D>().position;
 
         }
 
-    ////FixedUpdate is called at a fixed interval and is independent of frame rate. Put physics code here.
-    //void FixedUpdate()
-    //{
+        ////FixedUpdate is called at a fixed interval and is independent of frame rate. Put physics code here.
+        //void FixedUpdate()
+        //{
 
-    //}
+        //}
 
-    //void Update()
-    //    {
+        void Update()
+        {
 
+            SwipeAngleText.text = swipeAngleTextString; //UI only updated here??? why don't events work wtf!!!
 
-
-    //    }
+        }
 
 
         private void CreateSwipeGestures()
@@ -93,14 +101,23 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                //TODO: use gesture.Properties to actually launch projectile with path
-
                 Vector2 velocityPixels = new Vector2(gesture.VelocityX, gesture.VelocityY);
                 Vector2 forceofSwipe = CameraReference.ScreenToWorldPoint(velocityPixels);
 
-                //Have to apply smoothing; floor; ceiling; and implement extension length...
-                //TODO: Kinematic vs Dynamic for projectiles what the fuck... Fixed Update vs normal update WTF...
-                tentaController.MovePositionVelocity_TT = forceofSwipe;
+                //tentaController.MovePositionVelocity_TT = forceofSwipe;
+                tentaController.MovePositionVelocity_TT = forceofSwipe / swipeVelocityDividend;
+
+
+               // swipe angle is the swipe gesture's launch angle = inverse tan(change in y position / change x position)
+                float swipeAngle = Mathf.Rad2Deg * Mathf.Atan2( gesture.DeltaY, gesture.DeltaX);
+
+                // need to subtract 90 since RB2D.rotation units are clockwise: 0 @noon, -90 @3pm, -179 @5:59pm, 180 @6pm, 90 @9pm
+                //versus the normal unit circle units that Atan2 spits out clockwise: 90 @noon, 0 @3pm, -89 @5:59pm, -90 @6pm, -180 @9pm -270 @midnight, -360 @3am 
+                tentaController.MoveRotationAngle = Mathf.Round(swipeAngle - 90.0f); //rotation has little precision, rounding feels better in-game
+               //rotation units are wonky, only go to 180 to negative 180 and straight up is 0 degrees not 90.
+               //Since the up swipe only allows swipe angle to be unit circle degrees ~55 to ~125, simply subtracting 90 translates fine.
+
+                swipeAngleTextString += "  " + Mathf.Floor(swipeAngle).ToString();
 
                 FlickTentacle(gesture as SwipeGestureRecognizer);
             }
@@ -199,7 +216,7 @@ namespace SwordClash
                     if (swipedDot != null) //TODO: why does raycast hit everything WTF!!!!
                     {
                         swipedDot.OnSwipe(swipeGesture.Direction);
-                        dot.rigidbody.AddForce(forceofSwipe / 2, ForceMode2D.Impulse);
+                        dot.rigidbody.AddForce(forceofSwipe / swipeVelocityDividend, ForceMode2D.Impulse);
                     }
                 }
             }
