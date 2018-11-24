@@ -16,6 +16,7 @@ namespace SwordClash
         private float startTentacleLength;
         private Vector2 tentacleReadyPosition;
         private float startTentacleRotation;
+        private string UI_RotationValue;
 
         public Vector2 MovePositionVelocity_TT
         {
@@ -50,33 +51,26 @@ namespace SwordClash
             startTentacleRotation = TentacleTip_RB2D.rotation;
         }
 
-        //// Update is called once per frame
-        //void Update()
-        //{
-        //}
+        // Update is called once per frame
+        void Update()
+        {
+            RotationValue_UI_Text.text = UI_RotationValue;
+        }
 
         void FixedUpdate()
         {
             if (TentacleTip_RB2D.position.magnitude < maxTentacleLength)
             {
-                // Consider adding weight multiplier here to velocity as public field. In tutorial move with heavy weight to make it easier
+                //Position = current position + (Velocity vector of swipe per physics frame)
                 TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + MovePositionVelocity_TT * Time.fixedDeltaTime);
-                //TentacleTip_RB2D.transform.Rotate(Vector3.forward * Time.fixedDeltaTime);
-                //TentacleTip_RB2D.transform.Rotate(HeadingVector where tip will end up??? * Time.fixedDeltaTime);
-                //TentacleTip_RB2D.rotation = -45.0f;
-                //use starting position vector + velocity of swipe vector to calculute where it will end up 
-                //also have starting magnitude of position vector for max distance tentacle can travel.
-
-                TentacleTip_RB2D.rotation = MoveRotationAngle; 
-                //TentacleTip_RB2D.rotation += 0.05f;
-
-                RotationValue_UI_Text.text = TentacleTip_RB2D.rotation.ToString();
-
-
+                //Set in PlayerController, updated here, consider adding if(bool angleSet), here it doesn't need to change, not sure which is faster...
+                TentacleTip_RB2D.rotation = MoveRotationAngle;
+                //TODO: use actual UI events or plugin for UI; this is terrible.
+                UI_RotationValue = TentacleTip_RB2D.rotation.ToString();
             }
             else
             {
-                TentacleTip_RB2D.MovePosition(tentacleReadyPosition); //just teleport for now.
+                TentacleTip_RB2D.MovePosition(tentacleReadyPosition); //just teleport for now. Later change state.
                 MovePositionVelocity_TT = Vector2.zero; //zero out velocity vector
                 TentacleTip_RB2D.rotation = startTentacleRotation;
                 MoveRotationAngle = startTentacleRotation;

@@ -9,8 +9,12 @@ namespace SwordClash
     {
         #region EDITOR_FIELDS
         public float swipeCircleRayCastRadius; //~10.0f
-        public float swipeVelocityDividend; //divides swipe velocity to slow it down.
+        public float swipeSpeedConstant; //constant speed of tentacle
+        public float swipeSpeedModifier; //Added to constant speed of tentacle
         //TODO: need more fine-grained control than just dividend, need clamp and smoothing + better gesture properties to not have deadzones!
+        public float UPSwipeGestureDirectionThreshold; //= 1f; // where 1.5 means 1.5* greater y axis movement needed to for gesture event to fire.
+        public float L_R_D_SwipeGestureDirectionThreshold; //left right down swipes need to be more precise
+        public float maxDotsSpawnable;
 
         public GameObject DotPrefab;
         public Camera CameraReference;
@@ -79,7 +83,7 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                if (dotCount < 4)
+                if (dotCount < maxDotsSpawnable)
                 {
                     Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
                     SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
@@ -93,29 +97,75 @@ namespace SwordClash
             upSwipeGesture = new SwipeGestureRecognizer();
             upSwipeGesture.Direction = SwipeGestureRecognizerDirection.Up;
             upSwipeGesture.StateUpdated += SwipeGestureCallback_UP;
-            upSwipeGesture.DirectionThreshold = 1.5f; // 1.5* greater y axis movement
+            upSwipeGesture.DirectionThreshold = UPSwipeGestureDirectionThreshold; //still has 6 degree dead zone??? 39 to 32 if dirThresh is set to 1
             FingersScript.Instance.AddGesture(upSwipeGesture);
         }
+
+        //Other possible 'Fruit Ninja' Tentacle Control Scheme.
+        //private void CreateUpSwipeGesture()
+        //{
+        //    upSwipeGesture = new SwipeGestureRecognizer();
+        //    upSwipeGesture.Direction = SwipeGestureRecognizerDirection.Any;
+        //    upSwipeGesture.StateUpdated += SwipeGestureCallback_UP;
+        //    //upSwipeGesture.DirectionThreshold = UPSwipeGestureDirectionThreshold;
+        //    upSwipeGesture.MinimumSpeedUnits = 1.5f; //screen inches per second
+        //    upSwipeGesture.MinimumDistanceUnits = 0.25f;
+        //    upSwipeGesture.FailOnDirectionChange = false;
+        //    upSwipeGesture.EndMode = SwipeGestureRecognizerEndMode.EndContinusously;
+
+        //    FingersScript.Instance.AddGesture(upSwipeGesture);
+        //}
+
+        //private void SwipeGestureCallback_UP(GestureRecognizer gesture)
+        //{
+        //    if (gesture.State == GestureRecognizerState.Ended)
+        //    {
+
+        //        //Try finding rotation angle first THEN adding velocity / adding force to projectile???
+
+        //        Vector2 velocityPixels = new Vector2(gesture.VelocityX, gesture.VelocityY);
+        //        Vector2 forceofSwipe = CameraReference.ScreenToWorldPoint(velocityPixels);
+
+        //        //tentaController.MovePositionVelocity_TT = forceofSwipe;
+        //        tentaController.MovePositionVelocity_TT = forceofSwipe / swipeVelocityDividend;
+
+
+        //       // swipe angle is the swipe gesture's launch angle = inverse tan(change in y position / change x position)
+        //        float swipeAngle = Mathf.Rad2Deg * Mathf.Atan2( gesture.DeltaY, gesture.DeltaX);
+
+        //        // need to subtract 90 since RB2D.rotation units are clockwise: 0 @noon, -90 @3pm, -179 @5:59pm, 180 @6pm, 90 @9pm
+        //        //versus the normal unit circle units that Atan2 spits out clockwise: 90 @noon, 0 @3pm, -89 @5:59pm, -90 @6pm, -180 @9pm -270 @midnight, -360 @3am 
+        //        tentaController.MoveRotationAngle = Mathf.Round(swipeAngle - 90.0f); //rotation has little precision, rounding feels better in-game
+        //       //rotation units are wonky, only go to 180 to negative 180 and straight up is 0 degrees not 90.
+        //       //Since the up swipe only allows swipe angle to be unit circle degrees ~55 to ~125, simply subtracting 90 translates fine.
+
+        //        swipeAngleTextString += "  " + Mathf.Floor(swipeAngle).ToString();
+
+        //        FlickTentacle(gesture as SwipeGestureRecognizer);
+        //    }
+        //}
 
         private void SwipeGestureCallback_UP(GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                Vector2 velocityPixels = new Vector2(gesture.VelocityX, gesture.VelocityY);
-                Vector2 forceofSwipe = CameraReference.ScreenToWorldPoint(velocityPixels);
+                Vector2 normalizedSwipeVelocityVector = new Vector2(gesture.VelocityX, gesture.VelocityY).normalized;
 
-                //tentaController.MovePositionVelocity_TT = forceofSwipe;
-                tentaController.MovePositionVelocity_TT = forceofSwipe / swipeVelocityDividend;
+                //BAD! Do not do!!! FingersLite uses arbitrary Iphone inch pixel units, not actual pixels, ScrrentoWorldPoint() has big rounding errors!
+                //Vector2 forceofSwipe = CameraReference.ScreenToWorldPoint(velocityPixels);
+
+                //MovePosition Velocity = direction vector * speed
+                tentaController.MovePositionVelocity_TT = normalizedSwipeVelocityVector * (swipeSpeedConstant + swipeSpeedModifier); 
 
 
-               // swipe angle is the swipe gesture's launch angle = inverse tan(change in y position / change x position)
-                float swipeAngle = Mathf.Rad2Deg * Mathf.Atan2( gesture.DeltaY, gesture.DeltaX);
+                // swipe angle is the swipe gesture's launch angle = inverse tan(change in y position / change x position)
+                float swipeAngle = Mathf.Rad2Deg * Mathf.Atan2(gesture.DeltaY, gesture.DeltaX);
 
                 // need to subtract 90 since RB2D.rotation units are clockwise: 0 @noon, -90 @3pm, -179 @5:59pm, 180 @6pm, 90 @9pm
                 //versus the normal unit circle units that Atan2 spits out clockwise: 90 @noon, 0 @3pm, -89 @5:59pm, -90 @6pm, -180 @9pm -270 @midnight, -360 @3am 
                 tentaController.MoveRotationAngle = Mathf.Round(swipeAngle - 90.0f); //rotation has little precision, rounding feels better in-game
-               //rotation units are wonky, only go to 180 to negative 180 and straight up is 0 degrees not 90.
-               //Since the up swipe only allows swipe angle to be unit circle degrees ~55 to ~125, simply subtracting 90 translates fine.
+                                                                                     //rotation units are wonky, only go to 180 to negative 180 and straight up is 0 degrees not 90.
+                                                                                     //Since the up swipe only allows swipe angle to be unit circle degrees ~39 to ~136, simply subtracting 90 translates fine.
 
                 swipeAngleTextString += "  " + Mathf.Floor(swipeAngle).ToString();
 
@@ -169,7 +219,7 @@ namespace SwordClash
             whichSwipe = new SwipeGestureRecognizer();
             whichSwipe.Direction = direction;
             whichSwipe.StateUpdated += GestureCallback;
-            whichSwipe.DirectionThreshold = 1.5f;
+            whichSwipe.DirectionThreshold = L_R_D_SwipeGestureDirectionThreshold;
             FingersScript.Instance.AddGesture(whichSwipe);
         }
 
@@ -216,7 +266,9 @@ namespace SwordClash
                     if (swipedDot != null) //TODO: why does raycast hit everything WTF!!!!
                     {
                         swipedDot.OnSwipe(swipeGesture.Direction);
-                        dot.rigidbody.AddForce(forceofSwipe / swipeVelocityDividend, ForceMode2D.Impulse);
+                        //dot.rigidbody.AddForce(forceofSwipe / swipeVelocityDividend, ForceMode2D.Impulse);
+                        dot.rigidbody.AddForce(forceofSwipe / 4, ForceMode2D.Impulse);
+
                     }
                 }
             }
