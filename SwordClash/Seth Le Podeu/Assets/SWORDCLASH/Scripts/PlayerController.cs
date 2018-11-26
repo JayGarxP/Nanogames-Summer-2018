@@ -83,12 +83,25 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                if (dotCount < maxDotsSpawnable)
+
+                // Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
+                // SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
+                //CameraScaledWidth lines up nicely with gesture.Focus units somehow...
+                float ScreeenWidth = CameraReference.scaledPixelWidth;
+                ScreeenWidth = ScreeenWidth / 2.0f;
+
+                //Determine what side of screen is tapped, 'juke' to that side.
+                if (gesture.FocusX >= ScreeenWidth)
                 {
-                    Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
-                    SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
-                    dotCount++;
+
+                    tentaController.JukeRight();
                 }
+                else {
+                    tentaController.JukeLeft();
+                }
+
+                    
+                
              }
         }
 
@@ -100,50 +113,6 @@ namespace SwordClash
             upSwipeGesture.DirectionThreshold = UPSwipeGestureDirectionThreshold; //still has 6 degree dead zone??? 39 to 32 if dirThresh is set to 1
             FingersScript.Instance.AddGesture(upSwipeGesture);
         }
-
-        //Other possible 'Fruit Ninja' Tentacle Control Scheme.
-        //private void CreateUpSwipeGesture()
-        //{
-        //    upSwipeGesture = new SwipeGestureRecognizer();
-        //    upSwipeGesture.Direction = SwipeGestureRecognizerDirection.Any;
-        //    upSwipeGesture.StateUpdated += SwipeGestureCallback_UP;
-        //    //upSwipeGesture.DirectionThreshold = UPSwipeGestureDirectionThreshold;
-        //    upSwipeGesture.MinimumSpeedUnits = 1.5f; //screen inches per second
-        //    upSwipeGesture.MinimumDistanceUnits = 0.25f;
-        //    upSwipeGesture.FailOnDirectionChange = false;
-        //    upSwipeGesture.EndMode = SwipeGestureRecognizerEndMode.EndContinusously;
-
-        //    FingersScript.Instance.AddGesture(upSwipeGesture);
-        //}
-
-        //private void SwipeGestureCallback_UP(GestureRecognizer gesture)
-        //{
-        //    if (gesture.State == GestureRecognizerState.Ended)
-        //    {
-
-        //        //Try finding rotation angle first THEN adding velocity / adding force to projectile???
-
-        //        Vector2 velocityPixels = new Vector2(gesture.VelocityX, gesture.VelocityY);
-        //        Vector2 forceofSwipe = CameraReference.ScreenToWorldPoint(velocityPixels);
-
-        //        //tentaController.MovePositionVelocity_TT = forceofSwipe;
-        //        tentaController.MovePositionVelocity_TT = forceofSwipe / swipeVelocityDividend;
-
-
-        //       // swipe angle is the swipe gesture's launch angle = inverse tan(change in y position / change x position)
-        //        float swipeAngle = Mathf.Rad2Deg * Mathf.Atan2( gesture.DeltaY, gesture.DeltaX);
-
-        //        // need to subtract 90 since RB2D.rotation units are clockwise: 0 @noon, -90 @3pm, -179 @5:59pm, 180 @6pm, 90 @9pm
-        //        //versus the normal unit circle units that Atan2 spits out clockwise: 90 @noon, 0 @3pm, -89 @5:59pm, -90 @6pm, -180 @9pm -270 @midnight, -360 @3am 
-        //        tentaController.MoveRotationAngle = Mathf.Round(swipeAngle - 90.0f); //rotation has little precision, rounding feels better in-game
-        //       //rotation units are wonky, only go to 180 to negative 180 and straight up is 0 degrees not 90.
-        //       //Since the up swipe only allows swipe angle to be unit circle degrees ~55 to ~125, simply subtracting 90 translates fine.
-
-        //        swipeAngleTextString += "  " + Mathf.Floor(swipeAngle).ToString();
-
-        //        FlickTentacle(gesture as SwipeGestureRecognizer);
-        //    }
-        //}
 
         private void SwipeGestureCallback_UP(GestureRecognizer gesture)
         {
@@ -169,7 +138,7 @@ namespace SwordClash
 
                 swipeAngleTextString += "  " + Mathf.Floor(swipeAngle).ToString();
 
-                FlickTentacle(gesture as SwipeGestureRecognizer);
+                //FlickTentacle(gesture as SwipeGestureRecognizer);
             }
         }
 
