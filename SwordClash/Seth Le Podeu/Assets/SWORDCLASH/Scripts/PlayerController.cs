@@ -22,11 +22,13 @@ namespace SwordClash
        
         public GameObject LeftTentacle;
         #endregion
-        private TapGestureRecognizer tapGesture;
-        private SwipeGestureRecognizer upSwipeGesture;
-        private SwipeGestureRecognizer leftSwipeGesture;
-        private SwipeGestureRecognizer rightSwipeGesture;
-        private SwipeGestureRecognizer downSwipeGesture;
+
+        private TapGestureRecognizer tapGesture; //juke by which half of screen tapped
+        private TapGestureRecognizer doubleTapGesture; //dodge roll if double tap on tentacle tip
+        private SwipeGestureRecognizer upSwipeGesture; //send out tentacle
+        private SwipeGestureRecognizer leftSwipeGesture; //wall jump off right wall
+        private SwipeGestureRecognizer rightSwipeGesture; //wall jump off left wall
+        private SwipeGestureRecognizer downSwipeGesture; //Reel in tentacle
 
         private short dotCount;
         private TentacleController tentaController;
@@ -38,12 +40,15 @@ namespace SwordClash
         // Use this for initialization
         void Start()
         {
+            CreateDoubleTapGesture();
+
             CreateTapGesture();
+            //CreateDoubleTapGesture(); //test if order matters
             CreateSwipeGestures();
             dotCount = 0;
             swipeAngleTextString = SwipeAngleText.text;
 
-            tentaController = LeftTentacle.GetComponent<TentacleController>(); //how check if null???
+           tentaController = LeftTentacle.GetComponent<TentacleController>(); //how check if null???
            tentacleTipStartPosition = tentaController.GetComponent<Rigidbody2D>().position;
 
         }
@@ -75,7 +80,7 @@ namespace SwordClash
         {
             tapGesture = new TapGestureRecognizer();
             tapGesture.StateUpdated += TapGestureCallback;
-            //tapGesture.RequireGestureRecognizerToFail = doubleTapGesture;
+            tapGesture.RequireGestureRecognizerToFail = doubleTapGesture;
             FingersScript.Instance.AddGesture(tapGesture);
         }
 
@@ -103,6 +108,28 @@ namespace SwordClash
                     
                 
              }
+        }
+
+        private void CreateDoubleTapGesture()
+        {
+            doubleTapGesture = new TapGestureRecognizer();
+            doubleTapGesture.NumberOfTapsRequired = 2;
+            doubleTapGesture.ThresholdSeconds = 1.0f;
+            doubleTapGesture.StateUpdated += DoubleTapGestureCallback;
+            //doubleTapGesture.RequireGestureRecognizerToFail = tripleTapGesture;
+            FingersScript.Instance.AddGesture(doubleTapGesture);
+        }
+
+        private void DoubleTapGestureCallback(GestureRecognizer gesture)
+        {
+            if (gesture.State == GestureRecognizerState.Ended)
+            {
+                //DebugText("Double tapped at {0}, {1}", gesture.FocusX, gesture.FocusY);
+                //RemoveAsteroids(gesture.FocusX, gesture.FocusY, 16.0f);
+                //SpinTentacle
+                tentaController.BarrelRoll();
+
+            }
         }
 
         private void CreateUpSwipeGesture()
@@ -161,7 +188,8 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                FlickTentacle(gesture as SwipeGestureRecognizer);
+                //FlickTentacle(gesture as SwipeGestureRecognizer);
+                tentaController.ResetTentacleTipSprite();
             }
         }
 
