@@ -15,6 +15,7 @@ namespace SwordClash
         public Text RotationValue_UI_Text;
 
         public GameObject JellyfishEnemy;
+        public GameObject MovingJellyfishEnemy;
         public Sprite tentacleTipStung_Sprite;
 
         private JellyfishController JelFishController;
@@ -77,6 +78,9 @@ namespace SwordClash
             JelFishController = JellyfishEnemy.GetComponent<JellyfishController>();
             JelFishController.JellyfishHitByTentacleTip_Event += Handle_JellyfishHitByTentacleTip_Event;
 
+            var bigJelFishController = MovingJellyfishEnemy.GetComponent<JellyfishController>();
+            bigJelFishController.JellyfishHitByTentacleTip_Event += Handle_JellyfishHitByTentacleTip_Event;
+
             //Set sprite renderer reference so tentacle can change color
             m_SpriteRenderer = this.GetComponent<SpriteRenderer>();
             m_SceneSprite = m_SpriteRenderer.sprite;
@@ -110,6 +114,10 @@ namespace SwordClash
                 //TentacleTip_RB2D.rotation = TentacleTip_RB2D.rotation + (20); //rotates along wrong centroid, from collider, not centerered....
                 TentacleTip.transform.Rotate(0, 0, bRollRotateDegs, Space.World); //rotate gameobject via transform Space.World centroid, looks cooler.
                 BROLLFlagCurrentRotationDegs += bRollRotateDegs;
+
+                //still move, but more slowly
+                //Position = current position + (Velocity vector of swipe per physics frame)
+                TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + (MovePositionVelocity_TT * (Time.fixedDeltaTime * 0.5f)));
 
                 //If the barrelroll is over; the total spin 360, 720, etc. has been overcome by degrees of rotation per frame
                 if (BROLLFlagCurrentRotationDegs >= BROLLEndSpinRotationDegrees)
@@ -157,9 +165,11 @@ namespace SwordClash
         //the subscriber class needs a reference to the publisher class in order to subscribe to its events.
         void Handle_JellyfishHitByTentacleTip_Event(object sender, EventArgs a)
         {
-            // Change color/ZAP! and reset state into recharging
-            m_SpriteRenderer.sprite = tentacleTipStung_Sprite;
-
+            if (! tempBROLLFlag)
+            {
+                // Change color/ZAP! and reset state into recharging
+                m_SpriteRenderer.sprite = tentacleTipStung_Sprite;
+            }
             //Subscripe +=; Unsub -=;
             //publisher.RaiseCustomEvent += HandleCustomEvent;  
             //  publisher.RaiseCustomEvent -= HandleCustomEvent; 

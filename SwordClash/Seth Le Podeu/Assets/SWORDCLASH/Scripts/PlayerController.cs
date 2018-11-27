@@ -15,7 +15,8 @@ namespace SwordClash
         public float UPSwipeGestureDirectionThreshold; //= 1f; // where 1.5 means 1.5* greater y axis movement needed to for gesture event to fire.
         public float L_R_D_SwipeGestureDirectionThreshold; //left right down swipes need to be more precise
         public float maxDotsSpawnable;
-
+        public float doubleTapTimeThreshold; //time between taps allowed for double tap
+        //TODO: consider naming convention for editor fields, like field_EF;
         public GameObject DotPrefab;
         public Camera CameraReference;
         public Text SwipeAngleText;
@@ -40,10 +41,10 @@ namespace SwordClash
         // Use this for initialization
         void Start()
         {
-            CreateDoubleTapGesture();
+            CreateDoubleTapGesture(); //TODO: find event order solution: https://stackoverflow.com/questions/374398/are-event-subscribers-called-in-order-of-subscription
 
             CreateTapGesture();
-            //CreateDoubleTapGesture(); //test if order matters
+            //CreateDoubleTapGesture(); //test if order matters; it does sadly... :(
             CreateSwipeGestures();
             dotCount = 0;
             swipeAngleTextString = SwipeAngleText.text;
@@ -114,7 +115,7 @@ namespace SwordClash
         {
             doubleTapGesture = new TapGestureRecognizer();
             doubleTapGesture.NumberOfTapsRequired = 2;
-            doubleTapGesture.ThresholdSeconds = 1.0f;
+            doubleTapGesture.ThresholdSeconds = doubleTapTimeThreshold;
             doubleTapGesture.StateUpdated += DoubleTapGestureCallback;
             //doubleTapGesture.RequireGestureRecognizerToFail = tripleTapGesture;
             FingersScript.Instance.AddGesture(doubleTapGesture);
