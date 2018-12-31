@@ -13,10 +13,17 @@ namespace SwordClash
         public float bRollRotateDegs; //Degrees to rotate tentacle tip per physics update, ~20 looks good.
         public float BROLLEndSpinRotationDegrees; //snowboard style degrees of rotation until barrel roll ends, two rotations = 720.
         public Text RotationValue_UI_Text;
+        public float TT_jukePosRight_Amount;
+        public float TT_jukePosLeft_Amount;
+
+
 
         public GameObject JellyfishEnemy;
         public GameObject MovingJellyfishEnemy;
         public Sprite tentacleTipStung_Sprite;
+
+        //Tried to implement enterprise OO gang of four State pattern, was denied by Unity Component architecture...
+        public TentacleState CurrentTentacleState { get; set; }
 
         private JellyfishController JelFishController;
 
@@ -28,11 +35,7 @@ namespace SwordClash
         private string UI_RotationValue;
         private SpriteRenderer m_SpriteRenderer;
         private Sprite m_SceneSprite; //sprite object starts with
-
-        private bool tempJukeFlag;
-        private bool tempJukeFlagLeft;
-        private bool tempBROLLFlag;
-        private float BROLLFlagCurrentRotationDegs;
+        private float BROLLFlagCurrentRotationDegs; //Barrel roll degrees rotated currently, used to keep rotating the tentacle tip until the degrees specified in editor(EndSpin) are hit
        
 
         public Vector2 MovePositionVelocity_TT
@@ -51,19 +54,12 @@ namespace SwordClash
 
         public float MoveRotationAngle { get; set; }
 
-        
-
         // Setup the component you are on right now (the "this" object); before all Start()s
         void Awake()
         {
             MovePositionVelocity_TT = Vector2.zero;
             startTentacleLength = 0;
             BROLLFlagCurrentRotationDegs = 0.0f;
-
-
-        tempJukeFlag = false;
-            tempJukeFlagLeft = false;
-            tempBROLLFlag = false;
         }
 
         // Use this for initialization; Here you setup things that depend on other components.
@@ -77,13 +73,16 @@ namespace SwordClash
             //Collide with jellyfish event subscription
             JelFishController = JellyfishEnemy.GetComponent<JellyfishController>();
             JelFishController.JellyfishHitByTentacleTip_Event += Handle_JellyfishHitByTentacleTip_Event;
-
+            //TODO: child jellyfish in editor is NULL reference here... how avoid needing each controller instance??? Base class? Way for GetComponent to get ALL???
             var bigJelFishController = MovingJellyfishEnemy.GetComponent<JellyfishController>();
             bigJelFishController.JellyfishHitByTentacleTip_Event += Handle_JellyfishHitByTentacleTip_Event;
 
             //Set sprite renderer reference so tentacle can change color
             m_SpriteRenderer = this.GetComponent<SpriteRenderer>();
             m_SceneSprite = m_SpriteRenderer.sprite;
+
+            //Redundant cast seems to help avoid null reference in update loop
+            CurrentTentacleState = new CoiledState(((TentacleController)this));
         }
 
         // Update is called once per frame
@@ -92,63 +91,87 @@ namespace SwordClash
             RotationValue_UI_Text.text = UI_RotationValue;
         }
 
+        //TODO: understand the differences between each update loop, and best practices.
         void FixedUpdate()
         {
-
-            if (tempJukeFlag)
+            if (CurrentTentacleState != null)
             {
-                //TODO: make x coord adjustment a public editor field
-                Vector2 currentPositionVector = new Vector2(TentacleTip_RB2D.position.x + 1f, TentacleTip_RB2D.position.y);
-                TentacleTip_RB2D.position = currentPositionVector;
-                tempJukeFlag = false;
-            }
-            else if (tempJukeFlagLeft) {
-                Vector2 currentPositionVector = new Vector2(TentacleTip_RB2D.position.x - 1f, TentacleTip_RB2D.position.y);
-                TentacleTip_RB2D.position = currentPositionVector;
-                tempJukeFlagLeft = false;
-
+                CurrentTentacleState.ProcessState();
             }
 
-            if (tempBROLLFlag)
-            {
-                //TentacleTip_RB2D.rotation = TentacleTip_RB2D.rotation + (20); //rotates along wrong centroid, from collider, not centerered....
-                TentacleTip.transform.Rotate(0, 0, bRollRotateDegs, Space.World); //rotate gameobject via transform Space.World centroid, looks cooler.
-                BROLLFlagCurrentRotationDegs += bRollRotateDegs;
+        }
 
-                //still move, but more slowly
-                //Position = current position + (Velocity vector of swipe per physics frame)
-                TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + (MovePositionVelocity_TT * (Time.fixedDeltaTime * 0.5f)));
+        public void TT_RecoilTentacle()
+        {
+            ReelBack();
+        }
 
-                //If the barrelroll is over; the total spin 360, 720, etc. has been overcome by degrees of rotation per frame
-                if (BROLLFlagCurrentRotationDegs >= BROLLEndSpinRotationDegrees)
-                {
-                    tempBROLLFlag = false;
-                    BROLLFlagCurrentRotationDegs = 0;
-                    TentacleTip_RB2D.rotation = startTentacleRotation;
-                }
-            }
-            else
-            {
+        //TODO: make into seperate methods and or states to move tentacle
+        public void MoveTentacleTip()
+        {
 
+            //be careful! if physics update is not finished and you MovePosition() in same update frame, unexpected behavior will occur!
+            //Position = current position + (Velocity vector of swipe per physics frame) 
+            TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + MovePositionVelocity_TT * Time.fixedDeltaTime);
+            //Set in PlayerController, updated here, consider adding if(bool angleSet), here it doesn't need to change, not sure which is faster...
+            TentacleTip_RB2D.rotation = MoveRotationAngle;
+            //TODO: use actual UI events or plugin for UI; this is terrible.
+            UI_RotationValue = TentacleTip_RB2D.rotation.ToString();
+        }
 
-                if (TentacleTip_RB2D.position.magnitude < maxTentacleLength)
-                {
-                    //Position = current position + (Velocity vector of swipe per physics frame)
-                    TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + MovePositionVelocity_TT * Time.fixedDeltaTime);
-                    //Set in PlayerController, updated here, consider adding if(bool angleSet), here it doesn't need to change, not sure which is faster...
-                    TentacleTip_RB2D.rotation = MoveRotationAngle;
-                    //TODO: use actual UI events or plugin for UI; this is terrible.
-                    UI_RotationValue = TentacleTip_RB2D.rotation.ToString();
-                }
-                else
-                {
-                    TentacleTip_RB2D.MovePosition(tentacleReadyPosition); //just teleport for now. Later change state.
-                    MovePositionVelocity_TT = Vector2.zero; //zero out velocity vector
-                    TentacleTip_RB2D.rotation = startTentacleRotation;
-                    MoveRotationAngle = startTentacleRotation;
+        public bool IsTentacleAtMaxExtension()
+        {
+            return TentacleTip_RB2D.position.magnitude >= maxTentacleLength;
+        }
 
-                }
-            }
+        private void ReelBack()
+        {
+            TentacleTip_RB2D.MovePosition(tentacleReadyPosition); //just teleport for now. Later change state.
+            MovePositionVelocity_TT = Vector2.zero; //zero out velocity vector
+            TentacleTip_RB2D.rotation = startTentacleRotation;
+            MoveRotationAngle = startTentacleRotation;
+        }
+
+        private void Do_A_BarrelRoll()
+        {
+            ////TentacleTip_RB2D.rotation = TentacleTip_RB2D.rotation + (20); //rotates along wrong centroid, from collider, not centerered....
+            //TentacleTip.transform.Rotate(0, 0, bRollRotateDegs, Space.World); //rotate gameobject via transform Space.World centroid, looks cooler.
+            //BROLLFlagCurrentRotationDegs += bRollRotateDegs;
+
+            ////still move, but more slowly
+            ////Position = current position + (Velocity vector of swipe per physics frame)
+            //TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + (MovePositionVelocity_TT * (Time.fixedDeltaTime * 0.5f)));
+
+            ////If the barrelroll is over; the total spin 360, 720, etc. has been overcome by degrees of rotation per frame
+            //if (BROLLFlagCurrentRotationDegs >= BROLLEndSpinRotationDegrees)
+            //{
+            //    BarrelRoll_Flag = false;
+            //    BROLLFlagCurrentRotationDegs = 0;
+            //    TentacleTip_RB2D.rotation = startTentacleRotation;
+            //}
+        }
+
+        //For now is x position '-' instead of rights '+'; but juking may change in future, so leave as
+        // two seperate methods.
+        public void TT_JumpLeft()
+        {
+            TentacleTip_JumpLeft(TT_jukePosLeft_Amount);
+        }
+        private void TentacleTip_JumpLeft(float xPositionUnitstoJump)
+        {
+            Vector2 currentPositionVector = new Vector2(TentacleTip_RB2D.position.x - xPositionUnitstoJump, TentacleTip_RB2D.position.y);
+            TentacleTip_RB2D.position = currentPositionVector;
+        }
+
+        //called from fixed update, inside a state's ProcessState() method.
+        public void TT_JumpRight()
+        {
+            TentacleTip_JumpRight(TT_jukePosRight_Amount);
+        }
+        private void TentacleTip_JumpRight(float xPositionUnitstoJump)
+        {
+            Vector2 currentPositionVector = new Vector2(TentacleTip_RB2D.position.x + xPositionUnitstoJump, TentacleTip_RB2D.position.y);
+            TentacleTip_RB2D.position = currentPositionVector;
         }
 
         private void OnDestroy()
@@ -162,51 +185,66 @@ namespace SwordClash
             }
         }
 
+        
         //the subscriber class needs a reference to the publisher class in order to subscribe to its events.
         void Handle_JellyfishHitByTentacleTip_Event(object sender, EventArgs a)
         {
-            if (! tempBROLLFlag)
-            {
-                // Change color/ZAP! and reset state into recharging
-                m_SpriteRenderer.sprite = tentacleTipStung_Sprite;
-            }
+            //if (! BarrelRoll_Flag)
+            //{
+            //    // Change color/ZAP! and reset state into recharging
+            //    m_SpriteRenderer.sprite = tentacleTipStung_Sprite;
+            //}
             //Subscripe +=; Unsub -=;
             //publisher.RaiseCustomEvent += HandleCustomEvent;  
             //  publisher.RaiseCustomEvent -= HandleCustomEvent; 
         }
 
 
-        public void ResetTentacleTipSprite()
+        //TODO: solve signal problem
+        //Player controller receives input events
+        //Call method directly on current state?
+        //Use simple mutex around bool that does not allow flag changes during ProcessState()?
+        //'processing state' in base class variable
+        //no logic in the setters
+        //check that the state is not being processed before setting flag outside of ProcessState()
+        //inside ProcessState() just change the flag.
+
+        //Juke to the right, eventaully will only work 3 times either way; called by player controller
+        public void JukeRight_Please()
         {
-            //reset tentacle tip sprite to starting sprite; reference set in the Start() method
-            m_SpriteRenderer.sprite = m_SceneSprite;
+            //Use InputFlag enum in tentacle state to raise correct flag, casted to int
+            int RudderRight = (int)TentacleState.InputFlag_Enum.RudderRight;
+            CurrentTentacleState.RaiseTentacleFlag_Request(RudderRight);
         }
-
-
-
-        //Juke to the right, eventaully will only work 3 times either way
-        public void JukeRight()
-        {
-            tempJukeFlag = true; //TODO: make into IDISPOSABLE STATE MACHINE!!!
-           // Vector2 currentPositionVector = TentacleTip_RB2D.position;
-           // currentPositionVector.x += 100f;
-           // TentacleTip_RB2D.position = currentPositionVector;
-
-        }
+        //TODO: spawn bubbles on Right side; spawn bubs on left for JukeRight()
         public void JukeLeft()
         {
-            tempJukeFlagLeft = true; 
-            //TODO: spawn bubbles on Right side; spawn bubs on left for JukeRight()
-
+            int RudderLeft = (int)TentacleState.InputFlag_Enum.RudderLeft;
+            CurrentTentacleState.RaiseTentacleFlag_Request(RudderLeft);
         }
 
         public void BarrelRoll()
         {
             //i-frames begin
-            tempBROLLFlag = true;
+           // BarrelRoll_Flag = true;
 
             //for now, just rotate tip...
 
+        }
+
+        public void ReelInTentacle()
+        {
+            //ReelBack_Flag = true;
+            ResetTentacleTipSprite();
+
+        }
+
+
+
+        private void ResetTentacleTipSprite()
+        {
+            //reset tentacle tip sprite to starting sprite; reference set in the Start() method
+            m_SpriteRenderer.sprite = m_SceneSprite;
         }
 
 

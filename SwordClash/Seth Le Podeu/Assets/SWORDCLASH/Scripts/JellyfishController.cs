@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace SwordClash
 {
+    //Should each jellyfish have controller or should one controller manage each jellyfish in scene???
     public class JellyfishController : MonoBehaviour
     {
         //OnCollisionEnter() is event Publisher for trigger collision (hit jellyfish); Subscriber to collision event is tentacleController (where state machine will be implemented)
@@ -29,6 +30,7 @@ namespace SwordClash
             }
         }
 
+        //Dis dat Clinton Rodgers jam right here.
         //to start at scalar value
         private void Oscillate(OccilationFuntion method, float scalar)
         {

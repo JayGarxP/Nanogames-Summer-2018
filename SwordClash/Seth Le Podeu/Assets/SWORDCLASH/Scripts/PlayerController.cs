@@ -89,7 +89,6 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-
                 // Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
                 // SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
                 //CameraScaledWidth lines up nicely with gesture.Focus units somehow...
@@ -100,7 +99,11 @@ namespace SwordClash
                 if (gesture.FocusX >= ScreeenWidth)
                 {
 
-                    tentaController.JukeRight();
+                    tentaController.JukeRight_Please();
+                    //tentaController.currentState.JukeRight();
+                    //So, move flag dict to tentacleState abstract class,
+                    //then states will inherit JukeRight() which on valid states calls
+                    //tentaController.state.TentacleTip_Jumpright() //??? private will work?
                 }
                 else {
                     tentaController.JukeLeft();
@@ -190,7 +193,7 @@ namespace SwordClash
             if (gesture.State == GestureRecognizerState.Ended)
             {
                 //FlickTentacle(gesture as SwipeGestureRecognizer);
-                tentaController.ResetTentacleTipSprite();
+                tentaController.ReelInTentacle();
             }
         }
 
