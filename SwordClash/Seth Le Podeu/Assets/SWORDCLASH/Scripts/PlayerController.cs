@@ -106,7 +106,7 @@ namespace SwordClash
                     //tentaController.state.TentacleTip_Jumpright() //??? private will work?
                 }
                 else {
-                    tentaController.JukeLeft();
+                    tentaController.JukeLeft_Please();
                 }
 
                     
@@ -155,7 +155,8 @@ namespace SwordClash
                 //Vector2 forceofSwipe = CameraReference.ScreenToWorldPoint(velocityPixels);
 
                 //MovePosition Velocity = direction vector * speed
-                tentaController.MovePositionVelocity_TT = normalizedSwipeVelocityVector * (swipeSpeedConstant + swipeSpeedModifier); 
+                //tentaController.MovePositionVelocity_TT_Active = normalizedSwipeVelocityVector * (swipeSpeedConstant + swipeSpeedModifier); 
+                Vector2 swipeVelocityVect = normalizedSwipeVelocityVector * (swipeSpeedConstant + swipeSpeedModifier); 
 
 
                 // swipe angle is the swipe gesture's launch angle = inverse tan(change in y position / change x position)
@@ -163,11 +164,16 @@ namespace SwordClash
 
                 // need to subtract 90 since RB2D.rotation units are clockwise: 0 @noon, -90 @3pm, -179 @5:59pm, 180 @6pm, 90 @9pm
                 //versus the normal unit circle units that Atan2 spits out clockwise: 90 @noon, 0 @3pm, -89 @5:59pm, -90 @6pm, -180 @9pm -270 @midnight, -360 @3am 
-                tentaController.MoveRotationAngle = Mathf.Round(swipeAngle - 90.0f); //rotation has little precision, rounding feels better in-game
-                                                                                     //rotation units are wonky, only go to 180 to negative 180 and straight up is 0 degrees not 90.
-                                                                                     //Since the up swipe only allows swipe angle to be unit circle degrees ~39 to ~136, simply subtracting 90 translates fine.
+                //tentaController.MoveRotationAngle_TT_Active = Mathf.Round(swipeAngle - 90.0f); //rotation has little precision, rounding feels better in-game
+                //rotation units are wonky, only go to 180 to negative 180 and straight up is 0 degrees not 90.
+                //Since the up swipe only allows swipe angle to be unit circle degrees ~39 to ~136, simply subtracting 90 translates fine.
 
-                swipeAngleTextString += "  " + Mathf.Floor(swipeAngle).ToString();
+                swipeAngle = Mathf.Round(swipeAngle - 90.0f); //rotation has little precision, rounding feels better in-game
+
+                //Now, instead of directly setting it, make request to swipe tentacle
+                tentaController.LaunchTentacle_Please(swipeVelocityVect, swipeAngle);
+
+                //swipeAngleTextString += "  " + Mathf.Floor(swipeAngle).ToString();
 
                 //FlickTentacle(gesture as SwipeGestureRecognizer);
             }

@@ -15,6 +15,7 @@ namespace SwordClash
         public Text RotationValue_UI_Text;
         public float TT_jukePosRight_Amount;
         public float TT_jukePosLeft_Amount;
+        public float TT_timesAllowedToJuke; //3 means 3 taps can happen in one 'strike'
 
 
 
@@ -27,7 +28,9 @@ namespace SwordClash
 
         private JellyfishController JelFishController;
 
-        private Vector2 movePositionVelocity_TT;
+        private Vector2 movePositionVelocity_TT_Active;
+        public Vector2 movePositionVelocity_TT_Requested;
+        public float moveRotationAngle_TT_Requested; //for training mode 'ghosts'
         private Rigidbody2D TentacleTip_RB2D;
         private float startTentacleLength;
         private Vector2 tentacleReadyPosition;
@@ -38,26 +41,25 @@ namespace SwordClash
         private float BROLLFlagCurrentRotationDegs; //Barrel roll degrees rotated currently, used to keep rotating the tentacle tip until the degrees specified in editor(EndSpin) are hit
        
 
-        public Vector2 MovePositionVelocity_TT
+        public Vector2 MovePositionVelocity_TT_Active
         {
            get
             {
-                return movePositionVelocity_TT;
+                return movePositionVelocity_TT_Active;
             }
 
             set
             {
-                //TODO: Check refactory period timer here???
-                movePositionVelocity_TT = value;
+                movePositionVelocity_TT_Active = value;
             }
         }
 
-        public float MoveRotationAngle { get; set; }
+        public float MoveRotationAngle_TT_Active { get; set; }
 
         // Setup the component you are on right now (the "this" object); before all Start()s
         void Awake()
         {
-            MovePositionVelocity_TT = Vector2.zero;
+            MovePositionVelocity_TT_Active = Vector2.zero;
             startTentacleLength = 0;
             BROLLFlagCurrentRotationDegs = 0.0f;
         }
@@ -107,16 +109,26 @@ namespace SwordClash
         }
 
         //TODO: make into seperate methods and or states to move tentacle
-        public void MoveTentacleTip()
+        public void TT_MoveTentacleTip()
         {
 
             //be careful! if physics update is not finished and you MovePosition() in same update frame, unexpected behavior will occur!
             //Position = current position + (Velocity vector of swipe per physics frame) 
-            TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + MovePositionVelocity_TT * Time.fixedDeltaTime);
+            TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + MovePositionVelocity_TT_Active * Time.fixedDeltaTime);
             //Set in PlayerController, updated here, consider adding if(bool angleSet), here it doesn't need to change, not sure which is faster...
-            TentacleTip_RB2D.rotation = MoveRotationAngle;
+            TentacleTip_RB2D.rotation = MoveRotationAngle_TT_Active;
+
             //TODO: use actual UI events or plugin for UI; this is terrible.
-            UI_RotationValue = TentacleTip_RB2D.rotation.ToString();
+            //UI_RotationValue = TentacleTip_RB2D.rotation.ToString();
+        }
+        
+        public void TT_MoveTentacleTip(Vector2 swipePositionVelocity, float swipeAngle)
+        {
+            //be careful! if physics update is not finished and you MovePosition() in same update frame, unexpected behavior will occur!
+            //Position = current position + (Velocity vector of swipe per physics frame) 
+            TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + swipePositionVelocity * Time.fixedDeltaTime);
+            //Set in PlayerController, updated here, consider adding if(bool angleSet), here it doesn't need to change, not sure which is faster...
+            TentacleTip_RB2D.rotation = swipeAngle;
         }
 
         public bool IsTentacleAtMaxExtension()
@@ -127,9 +139,9 @@ namespace SwordClash
         private void ReelBack()
         {
             TentacleTip_RB2D.MovePosition(tentacleReadyPosition); //just teleport for now. Later change state.
-            MovePositionVelocity_TT = Vector2.zero; //zero out velocity vector
+            MovePositionVelocity_TT_Active = Vector2.zero; //zero out velocity vector
             TentacleTip_RB2D.rotation = startTentacleRotation;
-            MoveRotationAngle = startTentacleRotation;
+            MoveRotationAngle_TT_Active = startTentacleRotation;
         }
 
         private void Do_A_BarrelRoll()
@@ -198,17 +210,7 @@ namespace SwordClash
             //publisher.RaiseCustomEvent += HandleCustomEvent;  
             //  publisher.RaiseCustomEvent -= HandleCustomEvent; 
         }
-
-
-        //TODO: solve signal problem
-        //Player controller receives input events
-        //Call method directly on current state?
-        //Use simple mutex around bool that does not allow flag changes during ProcessState()?
-        //'processing state' in base class variable
-        //no logic in the setters
-        //check that the state is not being processed before setting flag outside of ProcessState()
-        //inside ProcessState() just change the flag.
-
+        
         //Juke to the right, eventaully will only work 3 times either way; called by player controller
         public void JukeRight_Please()
         {
@@ -217,11 +219,23 @@ namespace SwordClash
             CurrentTentacleState.RaiseTentacleFlag_Request(RudderRight);
         }
         //TODO: spawn bubbles on Right side; spawn bubs on left for JukeRight()
-        public void JukeLeft()
+        public void JukeLeft_Please()
         {
             int RudderLeft = (int)TentacleState.InputFlag_Enum.RudderLeft;
             CurrentTentacleState.RaiseTentacleFlag_Request(RudderLeft);
         }
+
+        public void LaunchTentacle_Please(Vector2 SwipeVelocityVector, float SwipeAngle_Unity)
+        {
+            //Save requested swipe (linear intepolation of swipes over time, 
+            //  with angles in RB2D.rotation friendly range)
+            movePositionVelocity_TT_Requested = SwipeVelocityVector;
+            moveRotationAngle_TT_Requested = SwipeAngle_Unity;
+
+            int LaunchTentFlagID = (int)TentacleState.InputFlag_Enum.LaunchSwipe;
+            CurrentTentacleState.RaiseTentacleFlag_Request(LaunchTentFlagID);
+        }
+
 
         public void BarrelRoll()
         {
