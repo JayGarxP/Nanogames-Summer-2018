@@ -9,9 +9,12 @@ namespace SwordClash
     public class TentacleController : MonoBehaviour
     {
         public GameObject TentacleTip;
+        public float UPswipeSpeedConstant; //constant speed of tentacle
+        public float UPswipeSpeedModifier; //Added to constant speed of tentacle
         public float maxTentacleLength;
         public float bRollRotateDegs; //Degrees to rotate tentacle tip per physics update, ~20 looks good.
         public float BROLLEndSpinRotationDegrees; //snowboard style degrees of rotation until barrel roll ends, two rotations = 720.
+        public short TimesCanBarrelRoll; //2 times means each up-swipe launch player gets two barrel rolls, reset once coiled
         public Text RotationValue_UI_Text;
         public float TT_jukePosRight_Amount;
         public float TT_jukePosLeft_Amount;
@@ -38,7 +41,6 @@ namespace SwordClash
         private string UI_RotationValue;
         private SpriteRenderer m_SpriteRenderer;
         private Sprite m_SceneSprite; //sprite object starts with
-        private float BROLLFlagCurrentRotationDegs; //Barrel roll degrees rotated currently, used to keep rotating the tentacle tip until the degrees specified in editor(EndSpin) are hit
        
 
         public Vector2 MovePositionVelocity_TT_Active
@@ -61,7 +63,6 @@ namespace SwordClash
         {
             MovePositionVelocity_TT_Active = Vector2.zero;
             startTentacleLength = 0;
-            BROLLFlagCurrentRotationDegs = 0.0f;
         }
 
         // Use this for initialization; Here you setup things that depend on other components.
@@ -131,6 +132,14 @@ namespace SwordClash
             TentacleTip_RB2D.rotation = swipeAngle;
         }
 
+        public void TT_MoveTentacleTip_WhileBroll(Vector2 swipePositionVelocity)
+        {
+            //Move at half delta time speed ~around sqrt the normal speed. Do not rotate, rotate seperately in another method.
+        TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + (swipePositionVelocity * (Time.fixedDeltaTime* 0.5f)));
+        }
+
+            
+
         public bool IsTentacleAtMaxExtension()
         {
             return TentacleTip_RB2D.position.magnitude >= maxTentacleLength;
@@ -144,23 +153,12 @@ namespace SwordClash
             MoveRotationAngle_TT_Active = startTentacleRotation;
         }
 
-        private void Do_A_BarrelRoll()
+        public float BarrelRollin_rotate(float degreesRotatedSoFar)
         {
-            ////TentacleTip_RB2D.rotation = TentacleTip_RB2D.rotation + (20); //rotates along wrong centroid, from collider, not centerered....
-            //TentacleTip.transform.Rotate(0, 0, bRollRotateDegs, Space.World); //rotate gameobject via transform Space.World centroid, looks cooler.
-            //BROLLFlagCurrentRotationDegs += bRollRotateDegs;
-
-            ////still move, but more slowly
-            ////Position = current position + (Velocity vector of swipe per physics frame)
-            //TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + (MovePositionVelocity_TT * (Time.fixedDeltaTime * 0.5f)));
-
-            ////If the barrelroll is over; the total spin 360, 720, etc. has been overcome by degrees of rotation per frame
-            //if (BROLLFlagCurrentRotationDegs >= BROLLEndSpinRotationDegrees)
-            //{
-            //    BarrelRoll_Flag = false;
-            //    BROLLFlagCurrentRotationDegs = 0;
-            //    TentacleTip_RB2D.rotation = startTentacleRotation;
-            //}
+            //TentacleTip_RB2D.rotation = TentacleTip_RB2D.rotation + (20); //rotates along wrong centroid, from collider, not centerered....
+            TentacleTip.transform.Rotate(0, 0, bRollRotateDegs, Space.World); //rotate gameobject via transform Space.World centroid, looks cooler.
+            degreesRotatedSoFar += bRollRotateDegs;
+            return degreesRotatedSoFar;
         }
 
         //For now is x position '-' instead of rights '+'; but juking may change in future, so leave as
@@ -225,11 +223,11 @@ namespace SwordClash
             CurrentTentacleState.RaiseTentacleFlag_Request(RudderLeft);
         }
 
-        public void LaunchTentacle_Please(Vector2 SwipeVelocityVector, float SwipeAngle_Unity)
+        public void LaunchTentacle_Please(Vector2 SwipeDirectionVector, float SwipeAngle_Unity)
         {
             //Save requested swipe (linear intepolation of swipes over time, 
             //  with angles in RB2D.rotation friendly range)
-            movePositionVelocity_TT_Requested = SwipeVelocityVector;
+            movePositionVelocity_TT_Requested = SwipeDirectionVector;
             moveRotationAngle_TT_Requested = SwipeAngle_Unity;
 
             int LaunchTentFlagID = (int)TentacleState.InputFlag_Enum.LaunchSwipe;
@@ -237,14 +235,15 @@ namespace SwordClash
         }
 
 
-        public void BarrelRoll()
+        public bool BarrelRoll_Please()
         {
-            //i-frames begin
-           // BarrelRoll_Flag = true;
-
-            //for now, just rotate tip...
-
+            int barrelRollFlagID = (int)TentacleState.InputFlag_Enum.BarrelRoll;
+            bool successfullyRaised = 
+            CurrentTentacleState.RaiseTentacleFlag_Request(barrelRollFlagID);
+            return successfullyRaised;
         }
+
+
 
         public void ReelInTentacle()
         {
@@ -253,7 +252,10 @@ namespace SwordClash
 
         }
 
-
+        public void ResetTentacleTipRotation()
+        {
+            TentacleTip_RB2D.rotation = startTentacleRotation;
+        }
 
         private void ResetTentacleTipSprite()
         {

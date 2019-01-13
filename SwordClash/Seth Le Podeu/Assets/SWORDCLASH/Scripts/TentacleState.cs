@@ -51,78 +51,9 @@ public enum MyEnum
          * */
 
 
-        //Not sure about best data structure for list of bools; hashtable probably better.
-        //see also HybridDictionary and other .NET dictionarys that work well with simple value types.
-        //protected Dictionary<InputFlag_Enum, bool> m_FlagDict;
-
         protected bool[] m_InputFlagArray;
         protected int m_InputFlagCount; // number of InputEnum values
 
-        //public bool RudderRight_Flag
-        //{
-        //    get
-        //    {
-        //        return m_RudderRight_Flag;
-        //    }
-
-        //    protected set
-        //    {
-        //        m_RudderRight_Flag = value;
-        //    }
-        //}
-
-        //public bool RudderLeft_Flag
-        //{
-        //    get
-        //    {
-        //        return m_RudderLeft_Flag;
-        //    }
-
-        //    protected set
-        //    {
-        //        m_RudderLeft_Flag = value;
-        //    }
-        //}
-
-        //public bool BarrelRoll_Flag
-        //{
-        //    get
-        //    {
-        //        return m_BarrelRoll_Flag;
-        //    }
-
-        //    protected set
-        //    {
-        //        m_BarrelRoll_Flag = value;
-        //    }
-        //}
-
-        //public bool ReelBack_Flag
-        //{
-        //    get
-        //    {
-        //        return m_ReelBack_Flag;
-        //    }
-
-        //    protected set
-        //    {
-        //        m_ReelBack_Flag = value;
-        //    }
-        //}
-
-        ////Sets all flags in collection, hardcoded in tentacleController for now, to false, returns number of flags set.
-        //public int SetAllFlagsFalse()
-        //{
-        //    int numFlagsSet = 0;
-
-        //    //  for each flag, flag.false();
-        //    foreach (var flagKey in m_FlagDict.Keys)
-        //    {
-        //        m_FlagDict[flagKey] = false;
-        //        numFlagsSet += 1;
-        //    }
-        //    return numFlagsSet;
-        //}
 
         public void LowerAllInputFlags()
         {
@@ -132,20 +63,7 @@ public enum MyEnum
             }
         }
 
-        //public int AddAllFlagstoDict(Dictionary<InputFlag_Enum, bool> flagDict)
-        //{
-        //    int numberFlagsAdded = 0;
-        //    int startingFlagDictCount = flagDict.Count;
-
-        //    flagDict.Add(InputFlag_Enum.RudderRight, RudderRight_Flag);
-        //    flagDict.Add(InputFlag_Enum.RudderLeft, RudderLeft_Flag);
-        //    flagDict.Add(InputFlag_Enum.BarrelRoll, BarrelRoll_Flag);
-        //    flagDict.Add(InputFlag_Enum.ReelBack, ReelBack_Flag);
-
-        //    numberFlagsAdded = startingFlagDictCount - flagDict.Count;
-        //    return numberFlagsAdded;
-        //}
-
+       
         //Used by other classes to attempt to raise a flag.
         //returns true if flag was raised false if currently processing state
         //please pass in InputFlag_Enum.FlagValue as parameter

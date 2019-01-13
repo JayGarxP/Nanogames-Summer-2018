@@ -20,8 +20,7 @@ namespace SwordClash
         //initialize with new tentacle controller, first coil of game
         public CoiledState(TentacleController tsc) : base(tsc)
         {
-            //m_FlagDict = new Dictionary<InputFlag_Enum, bool>();
-            //AddAllFlagstoDict(m_FlagDict);
+         
 
             OnStateEnter();
         }
@@ -56,6 +55,7 @@ namespace SwordClash
             if (m_InputFlagArray[(int)InputFlag_Enum.LaunchSwipe])
             {
                 //OnStateExit();
+
                 tentaControllerInstance.CurrentTentacleState = new ProjectileState(this,
                     tentaControllerInstance.movePositionVelocity_TT_Requested,
                     tentaControllerInstance.moveRotationAngle_TT_Requested);
@@ -74,11 +74,7 @@ namespace SwordClash
 
             }
 
-            ////TODO: Make Barrel Roll OWN state
-            //if (BarrelRoll_Flag)
-            //{
-            //    //tentaControllerInstance.Do_A_BarrelRoll();
-            //}
+            
             }
 
     }

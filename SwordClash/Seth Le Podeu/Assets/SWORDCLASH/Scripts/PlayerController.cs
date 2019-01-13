@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using DigitalRubyShared; //FingersLite
+using DigitalRubyShared; //Fingers bought full version 1/10/2019
 using System;
 
 namespace SwordClash
@@ -9,8 +9,7 @@ namespace SwordClash
     {
         #region EDITOR_FIELDS
         public float swipeCircleRayCastRadius; //~10.0f
-        public float swipeSpeedConstant; //constant speed of tentacle
-        public float swipeSpeedModifier; //Added to constant speed of tentacle
+        
         //TODO: need more fine-grained control than just dividend, need clamp and smoothing + better gesture properties to not have deadzones!
         public float UPSwipeGestureDirectionThreshold; //= 1f; // where 1.5 means 1.5* greater y axis movement needed to for gesture event to fire.
         public float L_R_D_SwipeGestureDirectionThreshold; //left right down swipes need to be more precise
@@ -22,6 +21,11 @@ namespace SwordClash
         public Text SwipeAngleText;
        
         public GameObject LeftTentacle;
+
+        //ImageScript set in editor, to recognize circles,
+        // see Image and Shape Recognition Training with Fingers - Touch Gestures for Unity by Jeff Johnson Digital Ruby
+        // https://www.youtube.com/watch?v=ljQkuqo1dV0
+        public FingersImageGestureHelper_SC_BarrelRoll ImageReconzrScript;
         #endregion
 
         private TapGestureRecognizer tapGesture; //juke by which half of screen tapped
@@ -36,21 +40,24 @@ namespace SwordClash
         private Vector2 tentacleTipStartPosition;
 
         private string swipeAngleTextString;
-        
+
+        private bool temp_Circled_soBROLL;
 
         // Use this for initialization
         void Start()
         {
-            CreateDoubleTapGesture(); //TODO: find event order solution: https://stackoverflow.com/questions/374398/are-event-subscribers-called-in-order-of-subscription
-
-            CreateTapGesture();
+            //CreateDoubleTapGesture(); //TODO: find event order solution: https://stackoverflow.com/questions/374398/are-event-subscribers-called-in-order-of-subscription
+            
             //CreateDoubleTapGesture(); //test if order matters; it does sadly... :(
             CreateSwipeGestures();
+            CreateTapGesture();
             dotCount = 0;
             swipeAngleTextString = SwipeAngleText.text;
 
            tentaController = LeftTentacle.GetComponent<TentacleController>(); //how check if null???
            tentacleTipStartPosition = tentaController.GetComponent<Rigidbody2D>().position;
+
+            temp_Circled_soBROLL = false;
 
         }
 
@@ -63,7 +70,39 @@ namespace SwordClash
         void Update()
         {
 
-            SwipeAngleText.text = swipeAngleTextString; //UI only updated here??? why don't events work wtf!!!
+            //SwipeAngleText.text = swipeAngleTextString; //UI only updated here??? why don't events work wtf!!!
+
+        }
+
+        private void LateUpdate()
+        {
+            //if (Input.GetKeyDown(KeyCode.Escape))
+            //{
+            //    ImageScript.Reset();
+            //}
+
+            //if (temp_Circled_soBROLL == false)
+            //{ }
+            //TODO: NOT WORKING FOR FUCK ALL!!! 1/13/2019
+            //Inside lateupdate is bad, need to make this event???
+            //Or re-train the circle gesture code first.
+
+                //ImageGestureImage match = ImageReconzrScript.CheckForImageMatch();
+                //if (match != null && match.Name == "Circle")
+                //{
+                
+                ////send barrel roll flag
+                //temp_Circled_soBROLL = tentaController.BarrelRoll_Please();
+
+                ////WHERE RESET GESTURE?!?!?! after setting it in FingerImage..SC for now
+                //// image gesture must be manually reset when a shape is recognized
+                //ImageReconzrScript.Reset();
+               
+                
+                //}
+          
+
+
 
         }
 
@@ -85,7 +124,9 @@ namespace SwordClash
             FingersScript.Instance.AddGesture(tapGesture);
         }
 
-        private void TapGestureCallback(GestureRecognizer gesture)
+       
+
+        private void TapGestureCallback(DigitalRubyShared.GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
@@ -108,9 +149,6 @@ namespace SwordClash
                 else {
                     tentaController.JukeLeft_Please();
                 }
-
-                    
-                
              }
         }
 
@@ -124,14 +162,15 @@ namespace SwordClash
             FingersScript.Instance.AddGesture(doubleTapGesture);
         }
 
-        private void DoubleTapGestureCallback(GestureRecognizer gesture)
+        private void DoubleTapGestureCallback(DigitalRubyShared.GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
                 //DebugText("Double tapped at {0}, {1}", gesture.FocusX, gesture.FocusY);
                 //RemoveAsteroids(gesture.FocusX, gesture.FocusY, 16.0f);
                 //SpinTentacle
-                tentaController.BarrelRoll();
+
+                //tentaController.BarrelRoll_Please();
 
             }
         }
@@ -145,7 +184,7 @@ namespace SwordClash
             FingersScript.Instance.AddGesture(upSwipeGesture);
         }
 
-        private void SwipeGestureCallback_UP(GestureRecognizer gesture)
+        private void SwipeGestureCallback_UP(DigitalRubyShared.GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
@@ -156,7 +195,7 @@ namespace SwordClash
 
                 //MovePosition Velocity = direction vector * speed
                 //tentaController.MovePositionVelocity_TT_Active = normalizedSwipeVelocityVector * (swipeSpeedConstant + swipeSpeedModifier); 
-                Vector2 swipeVelocityVect = normalizedSwipeVelocityVector * (swipeSpeedConstant + swipeSpeedModifier); 
+                //Vector2 swipeVelocityVect = normalizedSwipeVelocityVector * (swipeSpeedConstant + swipeSpeedModifier); 
 
 
                 // swipe angle is the swipe gesture's launch angle = inverse tan(change in y position / change x position)
@@ -171,7 +210,7 @@ namespace SwordClash
                 swipeAngle = Mathf.Round(swipeAngle - 90.0f); //rotation has little precision, rounding feels better in-game
 
                 //Now, instead of directly setting it, make request to swipe tentacle
-                tentaController.LaunchTentacle_Please(swipeVelocityVect, swipeAngle);
+                tentaController.LaunchTentacle_Please(normalizedSwipeVelocityVector, swipeAngle);
 
                 //swipeAngleTextString += "  " + Mathf.Floor(swipeAngle).ToString();
 
@@ -194,7 +233,7 @@ namespace SwordClash
             CreateDotSwipeGesture(downSwipeGesture, SwipeGestureRecognizerDirection.Down, SwipeGestureCallback_DOWN);
         }
 
-        private void SwipeGestureCallback_DOWN(GestureRecognizer gesture)
+        private void SwipeGestureCallback_DOWN(DigitalRubyShared.GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
@@ -203,7 +242,7 @@ namespace SwordClash
             }
         }
 
-        private void SwipeGestureCallback_LEFT(GestureRecognizer gesture)
+        private void SwipeGestureCallback_LEFT(DigitalRubyShared.GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
@@ -212,7 +251,7 @@ namespace SwordClash
             }
         }
 
-        private void SwipeGestureCallback_RIGHT(GestureRecognizer gesture)
+        private void SwipeGestureCallback_RIGHT(DigitalRubyShared.GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {

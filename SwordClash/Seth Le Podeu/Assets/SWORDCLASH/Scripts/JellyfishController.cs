@@ -49,8 +49,8 @@ namespace SwordClash
     
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            //Raise collide event, subscribed to in TentacleController
-            JellyfishHitByTentacleTip_Event(this, EventArgs.Empty);
+            ////Raise collide event, subscribed to in TentacleController
+            //JellyfishHitByTentacleTip_Event(this, EventArgs.Empty);
 
             ////the subscriber class needs a reference to the publisher class in order to subscribe to its events.
             //void HandleCustomEvent(object sender, CustomEventArgs a)
