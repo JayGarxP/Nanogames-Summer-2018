@@ -1,4 +1,5 @@
 ﻿using DigitalRubyShared;
+using System.Collections.Generic;
 
 namespace SwordClash
 {
@@ -6,6 +7,18 @@ namespace SwordClash
     {
         private ImageGestureImage matchedInputImage;
 
+        //Required gesturest to fail before image can be matched
+        public int RequireTheseGesturesToFail(List<GestureRecognizer> needTaFails)
+        {
+            int numGestureRecsFiredBeforeBarrelRollCircleImage = 0;
+            foreach (var jester in needTaFails)
+            {
+                Gesture.AddRequiredGestureRecognizerToFail(jester);
+                numGestureRecsFiredBeforeBarrelRollCircleImage++;
+            }
+
+            return numGestureRecsFiredBeforeBarrelRollCircleImage;
+        }
 
         public ImageGestureImage CheckForImageMatch()
         {
@@ -34,6 +47,7 @@ namespace SwordClash
         protected override void OnEnable()
         {
             base.OnEnable();
+            
         }
 
         protected override void LateUpdate()
@@ -41,8 +55,10 @@ namespace SwordClash
             base.LateUpdate();
         }
 
+        
         public void GestureCallback(DigitalRubyShared.GestureRecognizer gesture)
         {
+            
             if (gesture.State == GestureRecognizerState.Began)
             {
             }

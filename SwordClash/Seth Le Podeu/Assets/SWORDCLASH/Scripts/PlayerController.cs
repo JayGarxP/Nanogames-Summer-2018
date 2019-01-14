@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using DigitalRubyShared; //Fingers bought full version 1/10/2019
 using System;
+using System.Collections.Generic;
 
 namespace SwordClash
 {
@@ -22,10 +23,10 @@ namespace SwordClash
        
         public GameObject LeftTentacle;
 
-        //ImageScript set in editor, to recognize circles,
+        //ImageScript set in editor, to recognize circles, not working on android mobile
         // see Image and Shape Recognition Training with Fingers - Touch Gestures for Unity by Jeff Johnson Digital Ruby
         // https://www.youtube.com/watch?v=ljQkuqo1dV0
-        public FingersImageGestureHelper_SC_BarrelRoll ImageReconzrScript;
+       public FingersImageGestureHelper_SC_BarrelRoll ImageReconzrScript;
         #endregion
 
         private TapGestureRecognizer tapGesture; //juke by which half of screen tapped
@@ -59,6 +60,16 @@ namespace SwordClash
 
             temp_Circled_soBROLL = false;
 
+            //List<GestureRecognizer> Kyoto_b4_Broll = new List<GestureRecognizer>
+            //{
+            //    downSwipeGesture,
+            // //upSwipeGesture,
+            //    leftSwipeGesture,
+            //    rightSwipeGesture,
+            //    tapGesture
+            //};
+
+            //ImageReconzrScript.RequireTheseGesturesToFail(Kyoto_b4_Broll);
         }
 
         ////FixedUpdate is called at a fixed interval and is independent of frame rate. Put physics code here.
@@ -67,12 +78,12 @@ namespace SwordClash
 
         //}
 
-        void Update()
-        {
+        //void Update()
+        //{
 
-            //SwipeAngleText.text = swipeAngleTextString; //UI only updated here??? why don't events work wtf!!!
+        //    //SwipeAngleText.text = swipeAngleTextString; //UI only updated here??? why don't events work wtf!!!
 
-        }
+        //}
 
         private void LateUpdate()
         {
@@ -87,20 +98,20 @@ namespace SwordClash
             //Inside lateupdate is bad, need to make this event???
             //Or re-train the circle gesture code first.
 
-                //ImageGestureImage match = ImageReconzrScript.CheckForImageMatch();
-                //if (match != null && match.Name == "Circle")
-                //{
-                
-                ////send barrel roll flag
-                //temp_Circled_soBROLL = tentaController.BarrelRoll_Please();
+            ImageGestureImage match = ImageReconzrScript.CheckForImageMatch();
+            if (match != null && match.Name == "Circle")
+            {
 
-                ////WHERE RESET GESTURE?!?!?! after setting it in FingerImage..SC for now
-                //// image gesture must be manually reset when a shape is recognized
-                //ImageReconzrScript.Reset();
-               
-                
-                //}
-          
+                //send barrel roll flag
+                temp_Circled_soBROLL = tentaController.BarrelRoll_Please();
+
+                //WHERE RESET GESTURE?!?!?! after setting it in FingerImage..SC for now
+                // image gesture must be manually reset when a shape is recognized
+                ImageReconzrScript.Reset();
+
+
+            }
+
 
 
 
@@ -181,6 +192,10 @@ namespace SwordClash
             upSwipeGesture.Direction = SwipeGestureRecognizerDirection.Up;
             upSwipeGesture.StateUpdated += SwipeGestureCallback_UP;
             upSwipeGesture.DirectionThreshold = UPSwipeGestureDirectionThreshold; //still has 6 degree dead zone??? 39 to 32 if dirThresh is set to 1
+
+            ////Attempt to fix no swipe forward allowed bug. //Not working
+            //upSwipeGesture.AddRequiredGestureRecognizerToFail(ImageReconzrScript.Gesture);
+
             FingersScript.Instance.AddGesture(upSwipeGesture);
         }
 
