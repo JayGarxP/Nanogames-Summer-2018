@@ -8,8 +8,9 @@
 **/Assets/*/
 
 # Ignore everything except script code and text files, not sure how /*/ is working above
-!**/Assets/Scripts/
-!**/Assets/Strings/
+#!**/Assets/Scripts/
+#!**/Assets/Strings/
+!**/SwordClash/Seth Le Podeu/Assets/SWORDCLASH/Scripts/
 
 # Visual Studio cache directory
 .vs/

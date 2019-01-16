@@ -24,7 +24,7 @@ namespace SwordClash
         private float m_CurrentBrollDegreesRotated;
 
         public BarrelRollState(TentacleState oldState, Vector2 swipeVelocityVector, float swipeAngle, short brollCount)
-              : base(oldState.tentaControllerInstance)
+              : base(oldState.TentaControllerInstance)
         {
             this.m_SwipeVelocityVector = swipeVelocityVector;
             this.m_SwipeAngle = swipeAngle;
@@ -49,22 +49,22 @@ namespace SwordClash
         public override void ProcessState()
         {
             //NOT Free to process here!
-            m_Is_Currently_Processing = true;
+            IsCurrentlyProcessing = true;
 
-            m_CurrentBrollDegreesRotated = tentaControllerInstance.BarrelRollin_rotate(m_CurrentBrollDegreesRotated);
+            m_CurrentBrollDegreesRotated = TentaControllerInstance.BarrelRollin_rotate(m_CurrentBrollDegreesRotated);
 
             //still move, but more slowly
-            tentaControllerInstance.TT_MoveTentacleTip_WhileBroll(m_SwipeVelocityVector);
+            TentaControllerInstance.TT_MoveTentacleTip_WhileBroll(m_SwipeVelocityVector);
 
 
             //If the barrelroll is over; the total spin 360, 720, etc. has been overcome by degrees of rotation per frame
-            if (m_CurrentBrollDegreesRotated >= tentaControllerInstance.BROLLEndSpinRotationDegrees)
+            if (m_CurrentBrollDegreesRotated >= TentaControllerInstance.BROLLEndSpinRotationDegrees)
             {
-                tentaControllerInstance.ResetTentacleTipRotation();
+                TentaControllerInstance.ResetTentacleTipRotation();
                 OnStateExit();
                 //increment barrel roll count
                 m_BrollCount++;
-                tentaControllerInstance.CurrentTentacleState = new ProjectileState(this, m_SwipeVelocityVector, m_SwipeAngle, m_BrollCount);
+                TentaControllerInstance.CurrentTentacleState = new ProjectileState(this, m_SwipeVelocityVector, m_SwipeAngle, m_BrollCount);
             }
         }
     }

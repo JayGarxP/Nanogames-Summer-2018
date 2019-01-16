@@ -213,13 +213,13 @@ namespace SwordClash
         public void JukeRight_Please()
         {
             //Use InputFlag enum in tentacle state to raise correct flag, casted to int
-            int RudderRight = (int)TentacleState.InputFlag_Enum.RudderRight;
+            int RudderRight = (int)TentacleState.HotInputs.RudderRight;
             CurrentTentacleState.RaiseTentacleFlag_Request(RudderRight);
         }
         //TODO: spawn bubbles on Right side; spawn bubs on left for JukeRight()
         public void JukeLeft_Please()
         {
-            int RudderLeft = (int)TentacleState.InputFlag_Enum.RudderLeft;
+            int RudderLeft = (int)TentacleState.HotInputs.RudderLeft;
             CurrentTentacleState.RaiseTentacleFlag_Request(RudderLeft);
         }
 
@@ -230,14 +230,14 @@ namespace SwordClash
             movePositionVelocity_TT_Requested = SwipeDirectionVector;
             moveRotationAngle_TT_Requested = SwipeAngle_Unity;
 
-            int LaunchTentFlagID = (int)TentacleState.InputFlag_Enum.LaunchSwipe;
+            int LaunchTentFlagID = (int)TentacleState.HotInputs.LaunchSwipe;
             CurrentTentacleState.RaiseTentacleFlag_Request(LaunchTentFlagID);
         }
 
 
         public bool BarrelRoll_Please()
         {
-            int barrelRollFlagID = (int)TentacleState.InputFlag_Enum.BarrelRoll;
+            int barrelRollFlagID = (int)TentacleState.HotInputs.BarrelRoll;
             bool successfullyRaised = 
             CurrentTentacleState.RaiseTentacleFlag_Request(barrelRollFlagID);
             return successfullyRaised;

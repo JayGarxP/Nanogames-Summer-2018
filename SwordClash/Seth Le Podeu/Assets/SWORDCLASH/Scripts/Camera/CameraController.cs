@@ -7,27 +7,25 @@ namespace SwordClash
     {
 
         //EDITOR_FIELDS
-        public Camera defaultStartCamera;
+        public Camera DefaultStartCamera;
         public Camera PortraitCamera;
         public Camera LandscapeCamera;
 
-        private Camera _activeCamera;
+        private Camera ActiveCamera;
 
         // Use this for initialization
         void Start()
         {
-            _activeCamera = defaultStartCamera;
+            ActiveCamera = DefaultStartCamera;
             //DeviceChange.OnOrientationChange += MyOrientationChangeCode; //TODO: Update to new script AND unsubscribe to event with -=
             //DeviceChange.OnResolutionChange += MyResolutionChangeCode;   
         }
 
-        // Update is called once per frame
-        void Update()
-        {
+        //// Update is called once per frame
+        //void Update()
+        //{
 
-        }
-
-
+        //}
 
         void MyOrientationChangeCode(DeviceOrientation orientation)
         {
@@ -48,7 +46,7 @@ namespace SwordClash
                     break;
 
                 default:
-                    SetActiveCamera(defaultStartCamera);
+                    SetActiveCamera(DefaultStartCamera);
                     break;
             }
 
@@ -62,11 +60,11 @@ namespace SwordClash
 
         void SetActiveCamera(Camera newActiveCamera)
         {
-            if (newActiveCamera != _activeCamera)
+            if (newActiveCamera != ActiveCamera)
             {
-                _activeCamera.enabled = false;
-                _activeCamera = newActiveCamera;
-                _activeCamera.enabled = true;
+                ActiveCamera.enabled = false;
+                ActiveCamera = newActiveCamera;
+                ActiveCamera.enabled = true;
             }
         }
 
