@@ -8,32 +8,47 @@ namespace SwordClash
 {
     public class TentacleController : MonoBehaviour
     {
+#region PUBLIC EDITOR FIELDS
+        // Collision object
         public GameObject TentacleTip;
-        public float UPswipeSpeedConstant; //constant speed of tentacle
-        public float UPswipeSpeedModifier; //Added to constant speed of tentacle
+        // constant speed of tentacle
+        public float UPswipeSpeedConstant;
+        // Added to constant speed of tentacle
+        public float UPswipeSpeedModifier; 
+        // how far tentacle can go before retracting, currently 1/19/19 ununused.
         public float maxTentacleLength;
-        public float bRollRotateDegs; //Degrees to rotate tentacle tip per physics update, ~20 looks good.
-        public float BROLLEndSpinRotationDegrees; //snowboard style degrees of rotation until barrel roll ends, two rotations = 720.
-        public short TimesCanBarrelRoll; //2 times means each up-swipe launch player gets two barrel rolls, reset once coiled
+        // Degrees to rotate tentacle tip per physics update, ~20 looks good.
+        public float BarrelRollDegreestoRotatePerUpdate;
+        // snowboard style degrees of rotation until barrel roll ends, two rotations = 720.
+        public float BarrelRollEndSpinRotationDegrees;
+        // 2 times means each up-swipe launch player gets two barrel rolls, reset once coiled
+        public short TimesCanBarrelRoll; 
+        // real-time readout of tentacleTip's RB2D rotation value, will remove in future update
         public Text RotationValue_UI_Text;
-        public float TT_jukePosRight_Amount;
-        public float TT_jukePosLeft_Amount;
-        public float TT_timesAllowedToJuke; //3 means 3 taps can happen in one 'strike'
+        // RB2D.position units to teleport right--> by, 1 is default
+        public float TTJukePosRightAmount;
+        // RB2D.position units to teleport left<-- by, default is 1
+        public float TTJukePosLeftAmount;
+        //3 means 3 taps can happen in one 'strike' or projectile state
+        public float TTTimesAllowedToJuke; 
 
-
-
+        // Jellyfish gameobject references for collision handling, buggy as of 1/19/2019
         public GameObject JellyfishEnemy;
         public GameObject MovingJellyfishEnemy;
-        public Sprite tentacleTipStung_Sprite;
+        // Sprite to change TentacleTip sprite into after colliding with jellyfish
+        public Sprite TTStungSprite;
+        #endregion
 
-        //Tried to implement enterprise OO gang of four State pattern, was denied by Unity Component architecture...
+        // Gang of Four State pattern, state machine for inputs allowed during tentacle movement
         public TentacleState CurrentTentacleState { get; set; }
 
         private JellyfishController JelFishController;
+        //private Vector2 movePositionVelocity_TT_Active;
 
-        private Vector2 movePositionVelocity_TT_Active;
+        // for training mode 'ghosts', possibly save last input swipe?
         public Vector2 movePositionVelocity_TT_Requested;
-        public float moveRotationAngle_TT_Requested; //for training mode 'ghosts'
+        public float moveRotationAngle_TT_Requested; 
+
         private Rigidbody2D TentacleTip_RB2D;
         private float startTentacleLength;
         private Vector2 tentacleReadyPosition;
@@ -43,25 +58,25 @@ namespace SwordClash
         private Sprite m_SceneSprite; //sprite object starts with
        
 
-        public Vector2 MovePositionVelocity_TT_Active
-        {
-           get
-            {
-                return movePositionVelocity_TT_Active;
-            }
+        //public Vector2 MovePositionVelocity_TT_Active
+        //{
+        //   get
+        //    {
+        //        return movePositionVelocity_TT_Active;
+        //    }
 
-            set
-            {
-                movePositionVelocity_TT_Active = value;
-            }
-        }
+        //    set
+        //    {
+        //        movePositionVelocity_TT_Active = value;
+        //    }
+        //}
 
         public float MoveRotationAngle_TT_Active { get; set; }
 
         // Setup the component you are on right now (the "this" object); before all Start()s
         void Awake()
         {
-            MovePositionVelocity_TT_Active = Vector2.zero;
+            //MovePositionVelocity_TT_Active = Vector2.zero;
             startTentacleLength = 0;
         }
 
@@ -91,7 +106,7 @@ namespace SwordClash
         // Update is called once per frame
         void Update()
         {
-            RotationValue_UI_Text.text = UI_RotationValue;
+           // RotationValue_UI_Text.text = UI_RotationValue;
         }
 
         //TODO: understand the differences between each update loop, and best practices.
@@ -109,19 +124,19 @@ namespace SwordClash
             ReelBack();
         }
 
-        //TODO: make into seperate methods and or states to move tentacle
-        public void TT_MoveTentacleTip()
-        {
+        ////TODO: make into seperate methods and or states to move tentacle
+        //public void TT_MoveTentacleTip()
+        //{
 
-            //be careful! if physics update is not finished and you MovePosition() in same update frame, unexpected behavior will occur!
-            //Position = current position + (Velocity vector of swipe per physics frame) 
-            TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + MovePositionVelocity_TT_Active * Time.fixedDeltaTime);
-            //Set in PlayerController, updated here, consider adding if(bool angleSet), here it doesn't need to change, not sure which is faster...
-            TentacleTip_RB2D.rotation = MoveRotationAngle_TT_Active;
+        //    //be careful! if physics update is not finished and you MovePosition() in same update frame, unexpected behavior will occur!
+        //    //Position = current position + (Velocity vector of swipe per physics frame) 
+        //    TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + MovePositionVelocity_TT_Active * Time.fixedDeltaTime);
+        //    //Set in PlayerController, updated here, consider adding if(bool angleSet), here it doesn't need to change, not sure which is faster...
+        //    TentacleTip_RB2D.rotation = MoveRotationAngle_TT_Active;
 
-            //TODO: use actual UI events or plugin for UI; this is terrible.
-            //UI_RotationValue = TentacleTip_RB2D.rotation.ToString();
-        }
+        //    //TODO: use actual UI events or plugin for UI; this is terrible.
+        //    //UI_RotationValue = TentacleTip_RB2D.rotation.ToString();
+        //}
         
         public void TT_MoveTentacleTip(Vector2 swipePositionVelocity, float swipeAngle)
         {
@@ -148,7 +163,7 @@ namespace SwordClash
         private void ReelBack()
         {
             TentacleTip_RB2D.MovePosition(tentacleReadyPosition); //just teleport for now. Later change state.
-            MovePositionVelocity_TT_Active = Vector2.zero; //zero out velocity vector
+            //MovePositionVelocity_TT_Active = Vector2.zero; //zero out velocity vector
             TentacleTip_RB2D.rotation = startTentacleRotation;
             MoveRotationAngle_TT_Active = startTentacleRotation;
         }
@@ -156,8 +171,8 @@ namespace SwordClash
         public float BarrelRollin_rotate(float degreesRotatedSoFar)
         {
             //TentacleTip_RB2D.rotation = TentacleTip_RB2D.rotation + (20); //rotates along wrong centroid, from collider, not centerered....
-            TentacleTip.transform.Rotate(0, 0, bRollRotateDegs, Space.World); //rotate gameobject via transform Space.World centroid, looks cooler.
-            degreesRotatedSoFar += bRollRotateDegs;
+            TentacleTip.transform.Rotate(0, 0, BarrelRollDegreestoRotatePerUpdate, Space.World); //rotate gameobject via transform Space.World centroid, looks cooler.
+            degreesRotatedSoFar += BarrelRollDegreestoRotatePerUpdate;
             return degreesRotatedSoFar;
         }
 
@@ -165,7 +180,7 @@ namespace SwordClash
         // two seperate methods.
         public void TT_JumpLeft()
         {
-            TentacleTip_JumpLeft(TT_jukePosLeft_Amount);
+            TentacleTip_JumpLeft(TTJukePosLeftAmount);
         }
         private void TentacleTip_JumpLeft(float xPositionUnitstoJump)
         {
@@ -176,7 +191,7 @@ namespace SwordClash
         //called from fixed update, inside a state's ProcessState() method.
         public void TT_JumpRight()
         {
-            TentacleTip_JumpRight(TT_jukePosRight_Amount);
+            TentacleTip_JumpRight(TTJukePosRightAmount);
         }
         private void TentacleTip_JumpRight(float xPositionUnitstoJump)
         {
@@ -263,6 +278,22 @@ namespace SwordClash
             m_SpriteRenderer.sprite = m_SceneSprite;
         }
 
+
+        // Monobehavior reset when component is first dropped into scene, set default editor fields here
+        void Reset()
+        {
+            // Sets this value in editor when component is reset, or if the scene is renamed etc. 
+            //      Otherwise, the default value is zero
+            UPswipeSpeedConstant = 5;
+            UPswipeSpeedModifier = -2;
+            maxTentacleLength = 0;
+            BarrelRollDegreestoRotatePerUpdate = 20.0f;
+            BarrelRollEndSpinRotationDegrees = 720;
+            TimesCanBarrelRoll = 2;
+            TTJukePosLeftAmount = 1;
+            TTJukePosRightAmount = 1;
+            TTTimesAllowedToJuke = 3;
+        }
 
     }
 }

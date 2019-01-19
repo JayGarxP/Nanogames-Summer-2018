@@ -8,108 +8,114 @@ namespace SwordClash
 {
     class ProjectileState : TentacleState
     {
-        //initialize with another state, resuming coiled state
+        /// <summary>  
+        ///  Constructor to Initialize this state with another, (transition from coiled probably)
+        ///  <para> 
+        ///  Sets SwipeVelocityVector from swipeNormalVector using MultipyVectorComponentBySpeed()
+        ///  </para>
+        /// </summary>  
+        /// <param name="oldState">CoiledState for example;;;</param>
+        ///  <para>
+        ///  <param name="swipeNormalVector">Unit vector (vector with magnitude of 1) 
+        ///  representing swipe direction</param>
+        ///  <param name="swipeAngle">Atan unit circle units -90.0f == Unity.RigidBody2D.Rotation angle,
+        ///  responsibility of caller to convert angle to proper range</param>
+        ///  </para>
         public ProjectileState(TentacleState oldState, Vector2 swipeNormalVector, float swipeAngle)
             : base(oldState.TentaControllerInstance)
         {
-            this.m_SwipeVelocityVector = swipeNormalVector;
-            this.m_SwipeAngle = swipeAngle;
-            this.m_BrollCount = 0;
-
+            this.SwipeVelocityVector = swipeNormalVector;
+            this.SwipeAngle = swipeAngle;
+            this.BarrelRollCount = 0;
             
-            m_SwipeVelocityVector = MultiplyVectorComponentsBySpeed(
-                m_SwipeVelocityVector,
+            SwipeVelocityVector = MultiplyVectorComponentsBySpeed(
+                SwipeVelocityVector,
                 TentaControllerInstance.UPswipeSpeedConstant + TentaControllerInstance.UPswipeSpeedModifier
                 );
 
             OnStateEnter();
-
         }
 
-        //initialize from BarrelRollState which increments BrollCount as side-effect; BAD CODE
+        // initialize from BarrelRollState which increments BrollCount as side-effect; BAD CODE
         public ProjectileState(TentacleState oldState, Vector2 swipeVelocityVector, float swipeAngle, 
             short BrollCount)
             : base(oldState.TentaControllerInstance)
         {
-            this.m_SwipeVelocityVector = swipeVelocityVector;
-            this.m_SwipeAngle = swipeAngle;
+            this.SwipeVelocityVector = swipeVelocityVector;
+            this.SwipeAngle = swipeAngle;
             //check if in bad range here???
             //TODO: fix tight coupling of Moving and Barrel Roll state
-            this.m_BrollCount = BrollCount; 
+            this.BarrelRollCount = BrollCount; 
             OnStateEnter();
 
         }
 
-        private Vector2 m_SwipeVelocityVector;
-        private float m_SwipeAngle;
-        private short m_JukeCount;
-        private short m_BrollCount;
+        private Vector2 SwipeVelocityVector;
+        private float SwipeAngle;
+        private short JukeCount;
+        private short BarrelRollCount;
        
+        // Lower all inputflags set times juked count to zero
         public override void OnStateEnter()
         {
-            //Set actual tentacle movement vars, save the previous ones if needed
+            // Set actual tentacle movement vars, save the previous ones if needed
             //  not needed right now...
             LowerAllInputFlags();
-
-            m_JukeCount = 0;
-            
-
-            
-            
+            JukeCount = 0;
         }
 
+        // Recoil Tentacle and lower all input flags.
         public override void OnStateExit()
         {
             //just teleport for now
             TentaControllerInstance.TT_RecoilTentacle();
-
             LowerAllInputFlags();
         }
 
+        // WIP, See Game Design Doc for ProcessState's transition table
+        // code summary here for projectile.processstate()
         public override void ProcessState()
         {
-            //Free to process here,
+            // Free to process here,
             IsCurrentlyProcessing = false;
 
-            //Check if barrel roll flag and haven't already brolled too much
-            if ((m_BrollCount < TentaControllerInstance.TimesCanBarrelRoll) &&
+            // Check if barrel roll flag and haven't already brolled too much
+            if ((BarrelRollCount < TentaControllerInstance.TimesCanBarrelRoll) &&
                 (InputFlagArray[(int)HotInputs.BarrelRoll]))
             {
-                //OnStateExit();
-                TentaControllerInstance.CurrentTentacleState = new BarrelRollState(this, m_SwipeVelocityVector,
-                    m_SwipeAngle, m_BrollCount);
+                TentaControllerInstance.CurrentTentacleState = new BarrelRollState(this, SwipeVelocityVector,
+                    SwipeAngle, BarrelRollCount);
             }
             
 
-            //check if tapping after checking if tapped out
-            if (m_JukeCount < TentaControllerInstance.TT_timesAllowedToJuke)
+            // check if tapping after checking if tapped out
+            if (JukeCount < TentaControllerInstance.TTTimesAllowedToJuke)
             {
-                //if juke - right input received
+                // if juke - right input received
                 if (InputFlagArray[(int)HotInputs.RudderRight])
                 {
                     //TODO: make seperate jump methods for coiled jumps
                     TentaControllerInstance.TT_JumpRight(); 
                     InputFlagArray[(int)HotInputs.RudderRight] = false;
-                    ++m_JukeCount;
+                    ++JukeCount;
                 }
 
                 if (InputFlagArray[(int)HotInputs.RudderLeft])
                 {
                     TentaControllerInstance.TT_JumpLeft();
                     InputFlagArray[(int)HotInputs.RudderLeft] = false;
-                    ++m_JukeCount;
+                    ++JukeCount;
                 }
 
             }
 
-            //move tentacle tip
-            TentaControllerInstance.TT_MoveTentacleTip(m_SwipeVelocityVector, m_SwipeAngle);
+            // move tentacle tip
+            TentaControllerInstance.TT_MoveTentacleTip(SwipeVelocityVector, SwipeAngle);
 
-            //Check if done moving
+            // Check if done moving
             if (TentaControllerInstance.IsTentacleAtMaxExtension())
             {
                 //TODO: Recovery mode state
-
                 
                 OnStateExit();
                 TentaControllerInstance.CurrentTentacleState = new CoiledState(this);

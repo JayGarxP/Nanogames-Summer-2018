@@ -6,36 +6,37 @@ using UnityEngine;
 
 namespace SwordClash
 {
-    //End goal is to get players to paint/trace patterns on the glass, like fighting game inputs
+    // End goal is to get players to paint/trace patterns on the glass, like fighting game inputs
     class BarrelRollState : TentacleState
     {
         //Same members across multiple states, could put into abstract base class,
         //  could also create object pool for natural playing of game (pool of 10 states or so)
         //  worried about memory hogging / fragmentations from recreating vectors over and over, but
         //      maybe the constructor uses a reference somehow??? Not sure how it works???????
-        private Vector2 m_SwipeVelocityVector;
-        private float m_SwipeAngle;
+        private Vector2 SwipeVelocityVector;
+        private float SwipeAngle;
         //BAD CODE; two concrete classes share same variables: put in base class???
         //  maintain object/fields in Controller that tracts these variables?
         //  Should barrel roll be sub-state of projectile somehow??? then lose collision code...
-        private short m_BrollCount;
+        private short BarrelRollDuringThisProjectileCount;
        
+        // snowboard degrees, 720 == two spins; checked against max value set in public editor field set in TentacleController.cs
+        private float CurrentBrollDegreesRotated;
 
-        private float m_CurrentBrollDegreesRotated;
-
+        // Enter barrel roll from Projectile State, still WIP, so XML comment is coming.
         public BarrelRollState(TentacleState oldState, Vector2 swipeVelocityVector, float swipeAngle, short brollCount)
               : base(oldState.TentaControllerInstance)
         {
-            this.m_SwipeVelocityVector = swipeVelocityVector;
-            this.m_SwipeAngle = swipeAngle;
-            this.m_BrollCount = brollCount;
+            this.SwipeVelocityVector = swipeVelocityVector;
+            this.SwipeAngle = swipeAngle;
+            this.BarrelRollDuringThisProjectileCount = brollCount;
             OnStateEnter();
-
         }
 
+        // Reset degrees rotated count to zero, and lower all input flags
         public override void OnStateEnter()
         {
-            m_CurrentBrollDegreesRotated = 0.0f;
+            CurrentBrollDegreesRotated = 0.0f;
             LowerAllInputFlags();
         }
 
@@ -44,27 +45,27 @@ namespace SwordClash
             LowerAllInputFlags();
         }
 
-        //Rotate, move at half speed while rotating, check if done rotating to return to moving state pass in barrelRoll
-        //don't check any input flags, don't process any bad collision events, still do good ones tho
+        // Rotate, move at half speed while rotating, check if done rotating to return to moving state pass in barrelRoll
+        // don't check any input flags, don't process any bad collision events, still do good ones tho
         public override void ProcessState()
         {
-            //NOT Free to process here!
+            // NOT Free to process here!
             IsCurrentlyProcessing = true;
 
-            m_CurrentBrollDegreesRotated = TentaControllerInstance.BarrelRollin_rotate(m_CurrentBrollDegreesRotated);
+            CurrentBrollDegreesRotated = TentaControllerInstance.BarrelRollin_rotate(CurrentBrollDegreesRotated);
 
-            //still move, but more slowly
-            TentaControllerInstance.TT_MoveTentacleTip_WhileBroll(m_SwipeVelocityVector);
+            // still move, but more slowly
+            TentaControllerInstance.TT_MoveTentacleTip_WhileBroll(SwipeVelocityVector);
 
 
-            //If the barrelroll is over; the total spin 360, 720, etc. has been overcome by degrees of rotation per frame
-            if (m_CurrentBrollDegreesRotated >= TentaControllerInstance.BROLLEndSpinRotationDegrees)
+            // If the barrelroll is over; the total spin 360, 720, etc. has been overcome by degrees of rotation per frame
+            if (CurrentBrollDegreesRotated >= TentaControllerInstance.BarrelRollEndSpinRotationDegrees)
             {
                 TentaControllerInstance.ResetTentacleTipRotation();
                 OnStateExit();
                 //increment barrel roll count
-                m_BrollCount++;
-                TentaControllerInstance.CurrentTentacleState = new ProjectileState(this, m_SwipeVelocityVector, m_SwipeAngle, m_BrollCount);
+                BarrelRollDuringThisProjectileCount++;
+                TentaControllerInstance.CurrentTentacleState = new ProjectileState(this, SwipeVelocityVector, SwipeAngle, BarrelRollDuringThisProjectileCount);
             }
         }
     }

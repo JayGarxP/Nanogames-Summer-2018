@@ -37,9 +37,14 @@ namespace SwordClash
         // Inputs received each frame of physics FixedUpdate (for now)
         protected bool[] InputFlagArray;
         // number of HotInput values
-        protected int InputFlagCount; 
+        protected int InputFlagCount;
 
 
+        /// <summary>  
+        ///  Sets all values in InputFlagArray to false, using InputFlagCount to iterate
+        ///  <para>InputFlagCount should be same size value as HotInputs enum; 
+        ///  the size value is calculated automatically in the TentacleState constructor</para>
+        /// </summary>  
         public void LowerAllInputFlags()
         {
             for (int i = 0; i < InputFlagCount; i++)
@@ -49,6 +54,11 @@ namespace SwordClash
         }
 
 
+        /// <summary>  
+        ///  Constructor sets IsCurrentlyProcessing to false, and calculates number of input flags
+        ///  <para>Setting InputFlagArray elements to false</para>
+        /// </summary>  
+        /// <param name="tc">TentacleController instance is 'Context' of state pattern</param>
         public TentacleState(TentacleController tc)
         {
             TentaControllerInstance = tc;

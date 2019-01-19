@@ -5,11 +5,11 @@ using System.Text;
 
 namespace SwordClash
 {
-    //private??? possible this could be a static state, since all instances of it are the same...
+    // possible this could be a static state, since all instances of it are the same...
     public class CoiledState : TentacleState
     {
 
-        //initialize with another state, resuming coiled state
+        // initialize with another state, resuming coiled state
         public CoiledState(TentacleState oldState)
             :base(oldState.TentaControllerInstance)
         {
@@ -17,7 +17,7 @@ namespace SwordClash
 
         }
 
-        //initialize with new tentacle controller, first coil of game
+        // initialize with new tentacle controller, first coil of game
         public CoiledState(TentacleController tsc) : base(tsc)
         {
          
@@ -61,7 +61,7 @@ namespace SwordClash
                     TentaControllerInstance.moveRotationAngle_TT_Requested);
             }
 
-            //if juke-right input received
+            // if juke-right input received, actaully juke right using TentacleController callback method
             if (InputFlagArray[(int)HotInputs.RudderRight])
             {
                 TentaControllerInstance.TT_JumpRight(); //TODO: make seperate jump methods for coiled jumps
