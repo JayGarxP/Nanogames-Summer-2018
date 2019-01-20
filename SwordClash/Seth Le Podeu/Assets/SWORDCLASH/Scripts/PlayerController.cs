@@ -85,6 +85,7 @@ namespace SwordClash
 
         //}
 
+        // after MonoBehavior.Update(); see https://docs.unity3d.com/Manual/ExecutionOrder.html
         private void LateUpdate()
         {
             //if (Input.GetKeyDown(KeyCode.Escape))
@@ -107,7 +108,7 @@ namespace SwordClash
 
                 //WHERE RESET GESTURE?!?!?! after setting it in FingerImage..SC for now
                 // image gesture must be manually reset when a shape is recognized
-                ImageReconzrScript.Reset();
+                ImageReconzrScript.ResetMatchedImage();
 
 
             }

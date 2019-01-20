@@ -6,6 +6,9 @@ using UnityEngine.UI;
 
 namespace SwordClash
 {
+    /// <summary>  
+    ///  Controls how the tentacle responds to Input, how it is drawn, and how it collides with things.
+    /// </summary>  
     public class TentacleController : MonoBehaviour
     {
 #region PUBLIC EDITOR FIELDS
@@ -43,7 +46,6 @@ namespace SwordClash
         public TentacleState CurrentTentacleState { get; set; }
 
         private JellyfishController JelFishController;
-        //private Vector2 movePositionVelocity_TT_Active;
 
         // for training mode 'ghosts', possibly save last input swipe?
         public Vector2 movePositionVelocity_TT_Requested;
@@ -56,20 +58,6 @@ namespace SwordClash
         private string UI_RotationValue;
         private SpriteRenderer m_SpriteRenderer;
         private Sprite m_SceneSprite; //sprite object starts with
-       
-
-        //public Vector2 MovePositionVelocity_TT_Active
-        //{
-        //   get
-        //    {
-        //        return movePositionVelocity_TT_Active;
-        //    }
-
-        //    set
-        //    {
-        //        movePositionVelocity_TT_Active = value;
-        //    }
-        //}
 
         public float MoveRotationAngle_TT_Active { get; set; }
 
@@ -124,19 +112,6 @@ namespace SwordClash
             ReelBack();
         }
 
-        ////TODO: make into seperate methods and or states to move tentacle
-        //public void TT_MoveTentacleTip()
-        //{
-
-        //    //be careful! if physics update is not finished and you MovePosition() in same update frame, unexpected behavior will occur!
-        //    //Position = current position + (Velocity vector of swipe per physics frame) 
-        //    TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + MovePositionVelocity_TT_Active * Time.fixedDeltaTime);
-        //    //Set in PlayerController, updated here, consider adding if(bool angleSet), here it doesn't need to change, not sure which is faster...
-        //    TentacleTip_RB2D.rotation = MoveRotationAngle_TT_Active;
-
-        //    //TODO: use actual UI events or plugin for UI; this is terrible.
-        //    //UI_RotationValue = TentacleTip_RB2D.rotation.ToString();
-        //}
         
         public void TT_MoveTentacleTip(Vector2 swipePositionVelocity, float swipeAngle)
         {

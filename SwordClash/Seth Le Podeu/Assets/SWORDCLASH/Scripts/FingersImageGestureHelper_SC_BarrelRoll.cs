@@ -3,62 +3,22 @@ using System.Collections.Generic;
 
 namespace SwordClash
 {
+    /// <summary>  
+    ///  Component for recognizing image gestures (circle, X, swirly, etc.) or finger traces
+    /// </summary>  
+    /// <remarks>
+    /// ImageScript set in editor, to recognize circles,
+    /// see Image and Shape Recognition Training with Fingers - Touch Gestures for Unity by Jeff Johnson Digital Ruby
+    /// https://www.youtube.com/watch?v=ljQkuqo1dV0
+    /// </remarks> 
     public class FingersImageGestureHelper_SC_BarrelRoll : ImageGestureRecognizerComponentScript
     {
         private ImageGestureImage matchedInputImage;
 
-        //Required gesturest to fail before image can be matched
-        public int RequireTheseGesturesToFail(List<GestureRecognizer> needTaFails)
-        {
-            int numGestureRecsFiredBeforeBarrelRollCircleImage = 0;
-            foreach (var jester in needTaFails)
-            {
-                Gesture.AddRequiredGestureRecognizerToFail(jester);
-                numGestureRecsFiredBeforeBarrelRollCircleImage++;
-            }
-
-            return numGestureRecsFiredBeforeBarrelRollCircleImage;
-        }
-
-        public ImageGestureImage CheckForImageMatch()
-        {
-            if (matchedInputImage == null)
-            {
-                //if (MatchText != null)
-                //{
-                //    MatchText.text = "No match found!";
-                //}
-            }
-            else
-            {
-                //if (MatchText != null)
-                //{
-                //    MatchText.text = "You drew a " + matchedInputImage.Name;
-                //}
-
-                // image gesture must be manually reset when a shape is recognized
-                Gesture.Reset();
-
-            }
-
-            return matchedInputImage;
-        }
-
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-            
-        }
-
-        protected override void LateUpdate()
-        {
-            base.LateUpdate();
-        }
-
-        
+        // Generic gesture callback that catches image drawn on screen
         public void GestureCallback(DigitalRubyShared.GestureRecognizer gesture)
         {
-            
+
             if (gesture.State == GestureRecognizerState.Began)
             {
             }
@@ -77,13 +37,58 @@ namespace SwordClash
             //}
         }
 
+        // Required gestures to fail before image can be matched; don't need this if allowing simultaneous execution
+        public int RequireTheseGesturesToFail(List<GestureRecognizer> needTaFails)
+        {
+            int numGestureRecsFiredBeforeBarrelRollCircleImage = 0;
+            foreach (var jester in needTaFails)
+            {
+                Gesture.AddRequiredGestureRecognizerToFail(jester);
+                numGestureRecsFiredBeforeBarrelRollCircleImage++;
+            }
+
+            return numGestureRecsFiredBeforeBarrelRollCircleImage;
+        }
+
+        public ImageGestureImage CheckForImageMatch()
+        {
+            if (matchedInputImage == null)
+            {
+                // "No match found!";
+            }
+            else
+            {
+                // Gesture image match!
+
+                // image gesture must be manually reset when a shape is recognized
+                Gesture.Reset();
+            }
+
+            return matchedInputImage;
+        }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            
+        }
+
+        protected override void LateUpdate()
+        {
+            base.LateUpdate();
+        }
+
         /// <summary>
         /// Reset state, set matched inputImage to null
         /// </summary>
-        public void Reset()
+        public void ResetMatchedImage()
         {
             this.Gesture.Reset();
-            matchedInputImage = null; //jp added this to solve all gestures == barrel roll bug
+
+            // jp added this to solve all gestures == barrel roll bug
+            // need to manually call Gesture.Reset() and set the currently matched image to null manually,
+            //      to avoid re-raising the barrel roll flag right away in PlayerController.LateUpdate()
+            matchedInputImage = null; 
         }
     }
 }
