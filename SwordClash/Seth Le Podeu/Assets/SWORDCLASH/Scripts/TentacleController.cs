@@ -11,7 +11,8 @@ namespace SwordClash
     /// </summary>  
     public class TentacleController : MonoBehaviour
     {
-#region PUBLIC EDITOR FIELDS
+        #region PUBLIC EDITOR FIELDS
+        //TODO: make these private with [SerializeField] atrribute so they still appear in editor
         // Collision object
         public GameObject TentacleTip;
         // constant speed of tentacle
@@ -48,34 +49,32 @@ namespace SwordClash
         private JellyfishController JelFishController;
 
         // for training mode 'ghosts', possibly save last input swipe?
-        public Vector2 movePositionVelocity_TT_Requested;
-        public float moveRotationAngle_TT_Requested; 
+        public Vector2 TTMovePositionVelocityRequested;
+        public float TTMoveRotationAngleRequested; 
 
-        private Rigidbody2D TentacleTip_RB2D;
-        private float startTentacleLength;
-        private Vector2 tentacleReadyPosition;
-        private float startTentacleRotation;
-        private string UI_RotationValue;
-        private SpriteRenderer m_SpriteRenderer;
-        private Sprite m_SceneSprite; //sprite object starts with
+        private Rigidbody2D TentacleTipRB2D;
+        private float StartTentacleLength;
+        private Vector2 TentacleReadyPosition;
+        private float StartTentacleRotation;
+        private SpriteRenderer TTSpriteRenderer;
+        private Sprite TTSceneSprite; //sprite object starts with
 
-        public float MoveRotationAngle_TT_Active { get; set; }
 
         // Setup the component you are on right now (the "this" object); before all Start()s
         void Awake()
         {
             //MovePositionVelocity_TT_Active = Vector2.zero;
-            startTentacleLength = 0;
+            StartTentacleLength = 0;
         }
 
         // Use this for initialization; Here you setup things that depend on other components.
         void Start()
         {
-            TentacleTip_RB2D = TentacleTip.GetComponent<Rigidbody2D>();
-            tentacleReadyPosition = TentacleTip_RB2D.position;
-            startTentacleLength = tentacleReadyPosition.magnitude;
-            maxTentacleLength = startTentacleLength * 2; //TODO: fix maxtentacleLength solution
-            startTentacleRotation = TentacleTip_RB2D.rotation;
+            TentacleTipRB2D = TentacleTip.GetComponent<Rigidbody2D>();
+            TentacleReadyPosition = TentacleTipRB2D.position;
+            StartTentacleLength = TentacleReadyPosition.magnitude;
+            maxTentacleLength = StartTentacleLength * 2; //TODO: fix maxtentacleLength solution
+            StartTentacleRotation = TentacleTipRB2D.rotation;
             //Collide with jellyfish event subscription
             JelFishController = JellyfishEnemy.GetComponent<JellyfishController>();
             JelFishController.JellyfishHitByTentacleTip_Event += Handle_JellyfishHitByTentacleTip_Event;
@@ -84,8 +83,8 @@ namespace SwordClash
             bigJelFishController.JellyfishHitByTentacleTip_Event += Handle_JellyfishHitByTentacleTip_Event;
 
             //Set sprite renderer reference so tentacle can change color
-            m_SpriteRenderer = this.GetComponent<SpriteRenderer>();
-            m_SceneSprite = m_SpriteRenderer.sprite;
+            TTSpriteRenderer = this.GetComponent<SpriteRenderer>();
+            TTSceneSprite = TTSpriteRenderer.sprite;
 
             //Redundant cast seems to help avoid null reference in update loop
             CurrentTentacleState = new CoiledState(((TentacleController)this));
@@ -117,30 +116,29 @@ namespace SwordClash
         {
             //be careful! if physics update is not finished and you MovePosition() in same update frame, unexpected behavior will occur!
             //Position = current position + (Velocity vector of swipe per physics frame) 
-            TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + swipePositionVelocity * Time.fixedDeltaTime);
+            TentacleTipRB2D.MovePosition(TentacleTipRB2D.position + swipePositionVelocity * Time.fixedDeltaTime);
             //Set in PlayerController, updated here, consider adding if(bool angleSet), here it doesn't need to change, not sure which is faster...
-            TentacleTip_RB2D.rotation = swipeAngle;
+            TentacleTipRB2D.rotation = swipeAngle;
         }
 
         public void TT_MoveTentacleTip_WhileBroll(Vector2 swipePositionVelocity)
         {
             //Move at half delta time speed ~around sqrt the normal speed. Do not rotate, rotate seperately in another method.
-        TentacleTip_RB2D.MovePosition(TentacleTip_RB2D.position + (swipePositionVelocity * (Time.fixedDeltaTime* 0.5f)));
+        TentacleTipRB2D.MovePosition(TentacleTipRB2D.position + (swipePositionVelocity * (Time.fixedDeltaTime* 0.5f)));
         }
 
             
 
         public bool IsTentacleAtMaxExtension()
         {
-            return TentacleTip_RB2D.position.magnitude >= maxTentacleLength;
+            return TentacleTipRB2D.position.magnitude >= maxTentacleLength;
         }
 
         private void ReelBack()
         {
-            TentacleTip_RB2D.MovePosition(tentacleReadyPosition); //just teleport for now. Later change state.
-            //MovePositionVelocity_TT_Active = Vector2.zero; //zero out velocity vector
-            TentacleTip_RB2D.rotation = startTentacleRotation;
-            MoveRotationAngle_TT_Active = startTentacleRotation;
+            // just teleport for now. Later change state.
+            TentacleTipRB2D.MovePosition(TentacleReadyPosition); 
+            TentacleTipRB2D.rotation = StartTentacleRotation;
         }
 
         public float BarrelRollin_rotate(float degreesRotatedSoFar)
@@ -159,8 +157,8 @@ namespace SwordClash
         }
         private void TentacleTip_JumpLeft(float xPositionUnitstoJump)
         {
-            Vector2 currentPositionVector = new Vector2(TentacleTip_RB2D.position.x - xPositionUnitstoJump, TentacleTip_RB2D.position.y);
-            TentacleTip_RB2D.position = currentPositionVector;
+            Vector2 currentPositionVector = new Vector2(TentacleTipRB2D.position.x - xPositionUnitstoJump, TentacleTipRB2D.position.y);
+            TentacleTipRB2D.position = currentPositionVector;
         }
 
         //called from fixed update, inside a state's ProcessState() method.
@@ -170,8 +168,8 @@ namespace SwordClash
         }
         private void TentacleTip_JumpRight(float xPositionUnitstoJump)
         {
-            Vector2 currentPositionVector = new Vector2(TentacleTip_RB2D.position.x + xPositionUnitstoJump, TentacleTip_RB2D.position.y);
-            TentacleTip_RB2D.position = currentPositionVector;
+            Vector2 currentPositionVector = new Vector2(TentacleTipRB2D.position.x + xPositionUnitstoJump, TentacleTipRB2D.position.y);
+            TentacleTipRB2D.position = currentPositionVector;
         }
 
         private void OnDestroy()
@@ -199,6 +197,7 @@ namespace SwordClash
             //  publisher.RaiseCustomEvent -= HandleCustomEvent; 
         }
         
+        //TODO: rename methods to have Pleasefirst and remove the underscores
         //Juke to the right, eventaully will only work 3 times either way; called by player controller
         public void JukeRight_Please()
         {
@@ -217,8 +216,8 @@ namespace SwordClash
         {
             //Save requested swipe (linear intepolation of swipes over time, 
             //  with angles in RB2D.rotation friendly range)
-            movePositionVelocity_TT_Requested = SwipeDirectionVector;
-            moveRotationAngle_TT_Requested = SwipeAngle_Unity;
+            TTMovePositionVelocityRequested = SwipeDirectionVector;
+            TTMoveRotationAngleRequested = SwipeAngle_Unity;
 
             int LaunchTentFlagID = (int)TentacleState.HotInputs.LaunchSwipe;
             CurrentTentacleState.RaiseTentacleFlag_Request(LaunchTentFlagID);
@@ -233,8 +232,6 @@ namespace SwordClash
             return successfullyRaised;
         }
 
-
-
         public void ReelInTentacle()
         {
             //ReelBack_Flag = true;
@@ -244,15 +241,14 @@ namespace SwordClash
 
         public void ResetTentacleTipRotation()
         {
-            TentacleTip_RB2D.rotation = startTentacleRotation;
+            TentacleTipRB2D.rotation = StartTentacleRotation;
         }
 
         private void ResetTentacleTipSprite()
         {
             //reset tentacle tip sprite to starting sprite; reference set in the Start() method
-            m_SpriteRenderer.sprite = m_SceneSprite;
+            TTSpriteRenderer.sprite = TTSceneSprite;
         }
-
 
         // Monobehavior reset when component is first dropped into scene, set default editor fields here
         void Reset()

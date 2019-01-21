@@ -10,66 +10,61 @@ namespace SwordClash
     {
         #region EDITOR_FIELDS
         public float swipeCircleRayCastRadius; //~10.0f
-        
+
         //TODO: need more fine-grained control than just dividend, need clamp and smoothing + better gesture properties to not have deadzones!
-        public float UPSwipeGestureDirectionThreshold; //= 1f; // where 1.5 means 1.5* greater y axis movement needed to for gesture event to fire.
-        public float L_R_D_SwipeGestureDirectionThreshold; //left right down swipes need to be more precise
-        public float maxDotsSpawnable;
-        public float doubleTapTimeThreshold; //time between taps allowed for double tap
-        //TODO: consider naming convention for editor fields, like field_EF;
-        public GameObject DotPrefab;
+        // = 1f; // where 1.5 means 1.5* greater y axis movement needed to for gesture event to fire.
+        public float UPSwipeGestureDirectionThreshold;
+        // left right down swipes need to be more precise
+        public float LeftRightDownSwipeGestureDirectionThreshold; 
+        // time between taps allowed for double tap
+        public float DoubleTapTimeThreshold; 
+      
         public Camera CameraReference;
         public Text SwipeAngleText;
        
         public GameObject LeftTentacle;
 
-        //ImageScript set in editor, to recognize circles, not working on android mobile
-        // see Image and Shape Recognition Training with Fingers - Touch Gestures for Unity by Jeff Johnson Digital Ruby
-        // https://www.youtube.com/watch?v=ljQkuqo1dV0
+        // ImageScript set in editor, to recognize circles
        public FingersImageGestureHelper_SC_BarrelRoll ImageReconzrScript;
         #endregion
 
-        private TapGestureRecognizer tapGesture; //juke by which half of screen tapped
-        private TapGestureRecognizer doubleTapGesture; //dodge roll if double tap on tentacle tip
-        private SwipeGestureRecognizer upSwipeGesture; //send out tentacle
-        private SwipeGestureRecognizer leftSwipeGesture; //wall jump off right wall
-        private SwipeGestureRecognizer rightSwipeGesture; //wall jump off left wall
-        private SwipeGestureRecognizer downSwipeGesture; //Reel in tentacle
+        private TapGestureRecognizer TapGesture; //juke by which half of screen tapped
+        private TapGestureRecognizer DoubleTapGesture; //dodge roll if double tap on tentacle tip
+        //TODO: consider making a Swipe.Any gesture and deciding which kind it is in the callback method
+        private SwipeGestureRecognizer UpSwipeGesture; //send out tentacle
+        private SwipeGestureRecognizer LeftSwipeGesture; //wall jump off right wall
+        private SwipeGestureRecognizer RightSwipeGesture; //wall jump off left wall
+        private SwipeGestureRecognizer DownSwipeGesture; //Reel in tentacle
 
-        private short dotCount;
-        private TentacleController tentaController;
-        private Vector2 tentacleTipStartPosition;
-
-        private string swipeAngleTextString;
-
-        private bool temp_Circled_soBROLL;
+        
+        private TentacleController TentaController;
+        private Vector2 TentacleTipStartPosition;
 
         // Use this for initialization
         void Start()
         {
             //CreateDoubleTapGesture(); //TODO: find event order solution: https://stackoverflow.com/questions/374398/are-event-subscribers-called-in-order-of-subscription
             
-            //CreateDoubleTapGesture(); //test if order matters; it does sadly... :(
+            //CreateDoubleTapGesture(); // test if order matters; it does sadly... :(
             CreateSwipeGestures();
             CreateTapGesture();
-            dotCount = 0;
-            swipeAngleTextString = SwipeAngleText.text;
 
-           tentaController = LeftTentacle.GetComponent<TentacleController>(); //how check if null???
-           tentacleTipStartPosition = tentaController.GetComponent<Rigidbody2D>().position;
+            // check if component is unattached or null here? Not sure best way to make tightly-coupled components know of each other
+            if (LeftTentacle != null)
+            {
+                TentaController = LeftTentacle.GetComponent<TentacleController>();
+                if (TentaController == null)
+                {
+                    // Message using rich text.
+                    Debug.Log("<color=red>GetComponent Error: </color>LeftTentacle's TentacleController not found");
+                }
 
-            temp_Circled_soBROLL = false;
+                TentacleTipStartPosition = TentaController.GetComponent<Rigidbody2D>().position;
+            }
+            else {
+                Debug.Log("<color=red>Error: </color>LeftTentacle not set in Editor!");
+            }
 
-            //List<GestureRecognizer> Kyoto_b4_Broll = new List<GestureRecognizer>
-            //{
-            //    downSwipeGesture,
-            // //upSwipeGesture,
-            //    leftSwipeGesture,
-            //    rightSwipeGesture,
-            //    tapGesture
-            //};
-
-            //ImageReconzrScript.RequireTheseGesturesToFail(Kyoto_b4_Broll);
         }
 
         ////FixedUpdate is called at a fixed interval and is independent of frame rate. Put physics code here.
@@ -81,44 +76,24 @@ namespace SwordClash
         //void Update()
         //{
 
-        //    //SwipeAngleText.text = swipeAngleTextString; //UI only updated here??? why don't events work wtf!!!
-
         //}
 
         // after MonoBehavior.Update(); see https://docs.unity3d.com/Manual/ExecutionOrder.html
         private void LateUpdate()
         {
-            //if (Input.GetKeyDown(KeyCode.Escape))
-            //{
-            //    ImageScript.Reset();
-            //}
-
-            //if (temp_Circled_soBROLL == false)
-            //{ }
-            //TODO: NOT WORKING FOR FUCK ALL!!! 1/13/2019
-            //Inside lateupdate is bad, need to make this event???
-            //Or re-train the circle gesture code first.
-
             ImageGestureImage match = ImageReconzrScript.CheckForImageMatch();
             if (match != null && match.Name == "Circle")
             {
+                // send barrel roll flag
+               bool temp_Circled_soBROLL = TentaController.BarrelRoll_Please();
 
-                //send barrel roll flag
-                temp_Circled_soBROLL = tentaController.BarrelRoll_Please();
-
-                //WHERE RESET GESTURE?!?!?! after setting it in FingerImage..SC for now
-                // image gesture must be manually reset when a shape is recognized
+                // image gesture must be manually reset when a shape is recognized AND after calling BarrelRoll_Please()
                 ImageReconzrScript.ResetMatchedImage();
-
-
             }
-
-
-
 
         }
 
-
+        // Call create swipe gesture methods or all-in-one swipe gesture here
         private void CreateSwipeGestures()
         {
             CreateUpSwipeGesture();
@@ -130,48 +105,44 @@ namespace SwordClash
 
         private void CreateTapGesture()
         {
-            tapGesture = new TapGestureRecognizer();
-            tapGesture.StateUpdated += TapGestureCallback;
-            tapGesture.RequireGestureRecognizerToFail = doubleTapGesture;
-            FingersScript.Instance.AddGesture(tapGesture);
+            TapGesture = new TapGestureRecognizer();
+            TapGesture.StateUpdated += TapGestureCallback;
+            TapGesture.RequireGestureRecognizerToFail = DoubleTapGesture;
+            FingersScript.Instance.AddGesture(TapGesture);
         }
-
-       
 
         private void TapGestureCallback(DigitalRubyShared.GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                // Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
-                // SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
-                //CameraScaledWidth lines up nicely with gesture.Focus units somehow...
-                float ScreeenWidth = CameraReference.scaledPixelWidth;
-                ScreeenWidth = ScreeenWidth / 2.0f;
+                // Code to do something where player touched, show bubbles/sparkles like in Shadowverse for example.
+                //Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
+                //SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
+
+                // CameraScaledWidth lines up nicely with gesture.Focus units somehow...
+                float screeenWidth = CameraReference.scaledPixelWidth;
+                screeenWidth = screeenWidth / 2.0f;
 
                 //Determine what side of screen is tapped, 'juke' to that side.
-                if (gesture.FocusX >= ScreeenWidth)
+                if (gesture.FocusX >= screeenWidth)
                 {
-
-                    tentaController.JukeRight_Please();
-                    //tentaController.currentState.JukeRight();
-                    //So, move flag dict to tentacleState abstract class,
-                    //then states will inherit JukeRight() which on valid states calls
-                    //tentaController.state.TentacleTip_Jumpright() //??? private will work?
+                    TentaController.JukeRight_Please();
                 }
-                else {
-                    tentaController.JukeLeft_Please();
+                else
+                {
+                    TentaController.JukeLeft_Please();
                 }
              }
         }
 
         private void CreateDoubleTapGesture()
         {
-            doubleTapGesture = new TapGestureRecognizer();
-            doubleTapGesture.NumberOfTapsRequired = 2;
-            doubleTapGesture.ThresholdSeconds = doubleTapTimeThreshold;
-            doubleTapGesture.StateUpdated += DoubleTapGestureCallback;
+            DoubleTapGesture = new TapGestureRecognizer();
+            DoubleTapGesture.NumberOfTapsRequired = 2;
+            DoubleTapGesture.ThresholdSeconds = DoubleTapTimeThreshold;
+            DoubleTapGesture.StateUpdated += DoubleTapGestureCallback;
             //doubleTapGesture.RequireGestureRecognizerToFail = tripleTapGesture;
-            FingersScript.Instance.AddGesture(doubleTapGesture);
+            FingersScript.Instance.AddGesture(DoubleTapGesture);
         }
 
         private void DoubleTapGestureCallback(DigitalRubyShared.GestureRecognizer gesture)
@@ -179,82 +150,69 @@ namespace SwordClash
             if (gesture.State == GestureRecognizerState.Ended)
             {
                 //DebugText("Double tapped at {0}, {1}", gesture.FocusX, gesture.FocusY);
-                //RemoveAsteroids(gesture.FocusX, gesture.FocusY, 16.0f);
-                //SpinTentacle
-
-                //tentaController.BarrelRoll_Please();
-
             }
         }
 
         private void CreateUpSwipeGesture()
         {
-            upSwipeGesture = new SwipeGestureRecognizer();
-            upSwipeGesture.Direction = SwipeGestureRecognizerDirection.Up;
-            upSwipeGesture.StateUpdated += SwipeGestureCallback_UP;
-            upSwipeGesture.DirectionThreshold = UPSwipeGestureDirectionThreshold; //still has 6 degree dead zone??? 39 to 32 if dirThresh is set to 1
+            UpSwipeGesture = new SwipeGestureRecognizer();
+            UpSwipeGesture.Direction = SwipeGestureRecognizerDirection.Up;
+            UpSwipeGesture.StateUpdated += SwipeGestureCallback_UP;
+            // Still has 6 degree dead zone??? 39 to 32 if dirThresh is set to 1
+            UpSwipeGesture.DirectionThreshold = UPSwipeGestureDirectionThreshold; 
 
-            ////Attempt to fix no swipe forward allowed bug. //Not working
-            //upSwipeGesture.AddRequiredGestureRecognizerToFail(ImageReconzrScript.Gesture);
-
-            FingersScript.Instance.AddGesture(upSwipeGesture);
+            FingersScript.Instance.AddGesture(UpSwipeGesture);
         }
 
+        // Launch Projectile, still WIP, hence many odd comments inside
         private void SwipeGestureCallback_UP(DigitalRubyShared.GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
                 Vector2 normalizedSwipeVelocityVector = new Vector2(gesture.VelocityX, gesture.VelocityY).normalized;
 
-                //BAD! Do not do!!! FingersLite uses arbitrary Iphone inch pixel units, not actual pixels, ScrrentoWorldPoint() has big rounding errors!
+                // BAD! Do not do!!! FingersLite uses arbitrary Iphone inch pixel units, not actual pixels, ScrrentoWorldPoint() has big rounding errors!
                 //Vector2 forceofSwipe = CameraReference.ScreenToWorldPoint(velocityPixels);
-
-                //MovePosition Velocity = direction vector * speed
-                //tentaController.MovePositionVelocity_TT_Active = normalizedSwipeVelocityVector * (swipeSpeedConstant + swipeSpeedModifier); 
-                //Vector2 swipeVelocityVect = normalizedSwipeVelocityVector * (swipeSpeedConstant + swipeSpeedModifier); 
 
 
                 // swipe angle is the swipe gesture's launch angle = inverse tan(change in y position / change x position)
                 float swipeAngle = Mathf.Rad2Deg * Mathf.Atan2(gesture.DeltaY, gesture.DeltaX);
 
                 // need to subtract 90 since RB2D.rotation units are clockwise: 0 @noon, -90 @3pm, -179 @5:59pm, 180 @6pm, 90 @9pm
-                //versus the normal unit circle units that Atan2 spits out clockwise: 90 @noon, 0 @3pm, -89 @5:59pm, -90 @6pm, -180 @9pm -270 @midnight, -360 @3am 
-                //tentaController.MoveRotationAngle_TT_Active = Mathf.Round(swipeAngle - 90.0f); //rotation has little precision, rounding feels better in-game
-                //rotation units are wonky, only go to 180 to negative 180 and straight up is 0 degrees not 90.
-                //Since the up swipe only allows swipe angle to be unit circle degrees ~39 to ~136, simply subtracting 90 translates fine.
+                //  versus the normal unit circle units that Atan2 spits out clockwise: 90 @noon, 0 @3pm, -89 @5:59pm, -90 @6pm, -180 @9pm -270 @midnight, -360 @3am 
+                //  rotation units are wonky, only go to 180 to negative 180 and straight up is 0 degrees not 90.
+                //  Since the up swipe only allows swipe angle to be unit circle degrees ~39 to ~136, simply subtracting 90 translates fine.
 
-                swipeAngle = Mathf.Round(swipeAngle - 90.0f); //rotation has little precision, rounding feels better in-game
+                // rotation has little precision, rounding feels better/smoother in-game
+                swipeAngle = Mathf.Round(swipeAngle - 90.0f); 
 
-                //Now, instead of directly setting it, make request to swipe tentacle
-                tentaController.LaunchTentacle_Please(normalizedSwipeVelocityVector, swipeAngle);
-
-                //swipeAngleTextString += "  " + Mathf.Floor(swipeAngle).ToString();
-
-                //FlickTentacle(gesture as SwipeGestureRecognizer);
+                // Now, instead of directly setting it, make request to swipe tentacle
+                TentaController.LaunchTentacle_Please(normalizedSwipeVelocityVector, swipeAngle);
             }
         }
 
         private void CreateRightSwipeGesture()
         {
-            CreateDotSwipeGesture(rightSwipeGesture, SwipeGestureRecognizerDirection.Right, SwipeGestureCallback_RIGHT);
+            CreateDotSwipeGesture(RightSwipeGesture, SwipeGestureRecognizerDirection.Right, SwipeGestureCallback_RIGHT);
         }
 
         private void CreateLeftSwipeGesture()
         {
-            CreateDotSwipeGesture(leftSwipeGesture, SwipeGestureRecognizerDirection.Left, SwipeGestureCallback_LEFT);
+            CreateDotSwipeGesture(LeftSwipeGesture, SwipeGestureRecognizerDirection.Left, SwipeGestureCallback_LEFT);
         }
 
         private void CreateDownSwipeGesture()
         {
-            CreateDotSwipeGesture(downSwipeGesture, SwipeGestureRecognizerDirection.Down, SwipeGestureCallback_DOWN);
+            CreateDotSwipeGesture(DownSwipeGesture, SwipeGestureRecognizerDirection.Down, SwipeGestureCallback_DOWN);
         }
 
         private void SwipeGestureCallback_DOWN(DigitalRubyShared.GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                //FlickTentacle(gesture as SwipeGestureRecognizer);
-                tentaController.ReelInTentacle();
+                //TODO: should be a Please() method
+                TentaController.ReelInTentacle();
+                
             }
         }
 
@@ -262,7 +220,7 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                FlickTentacle(gesture as SwipeGestureRecognizer);
+                //FlickTentacle(gesture as SwipeGestureRecognizer);
 
             }
         }
@@ -271,7 +229,7 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                FlickTentacle(gesture as SwipeGestureRecognizer);
+                //FlickTentacle(gesture as SwipeGestureRecognizer);
 
             }
         }
@@ -281,72 +239,23 @@ namespace SwordClash
             whichSwipe = new SwipeGestureRecognizer();
             whichSwipe.Direction = direction;
             whichSwipe.StateUpdated += GestureCallback;
-            whichSwipe.DirectionThreshold = L_R_D_SwipeGestureDirectionThreshold;
+            whichSwipe.DirectionThreshold = LeftRightDownSwipeGestureDirectionThreshold;
             FingersScript.Instance.AddGesture(whichSwipe);
         }
 
-        private void FlickTentacle(SwipeGestureRecognizer swipeGesture)
+
+        // When this component is reset, renamed, or placed in new scene: set default values of editor fields
+        private void Reset()
         {
-            Vector2 velocityPixels = new Vector2(swipeGesture.VelocityX, swipeGesture.VelocityY);
+            // When playtesting these, you can copy during Unity Play mode then paste the value in during Edit mode,
+            // as quick way to tweak the editor fields.
 
-            Vector2 flickStart = new Vector2(swipeGesture.StartFocusX, swipeGesture.StartFocusY);
-
-            Vector3 flickStartWORLD = CameraReference.ScreenToWorldPoint(flickStart);
-            //Building start and ends of swipe, need to convert to world coordinates though
-            Vector3 flickEndWORLD = CameraReference.ScreenToWorldPoint(new Vector2(swipeGesture.FocusX, swipeGesture.FocusY));
-
-            flickStartWORLD.z = 0.0f;
-            flickEndWORLD.z = 0.0f; //zero out z values just in case
-
-
-            var heading = flickEndWORLD - flickStartWORLD;
-            var swipeDistance = heading.magnitude;
-            var swipeDirection = heading / swipeDistance; // This is now the normalized direction, unit, magnitude == 1.
-
-            //Vector2 forceofSwipe = new Vector2(heading.x, heading.y);
-            Vector2 forceofSwipe = CameraReference.ScreenToWorldPoint(velocityPixels);
-
-            //should world coords .z be set to 0.0f????
-
-            ////Use this property for distance checks, sqRT is CPU intensive
-            //if (heading.sqrMagnitude < maxRange * maxRange)
-            //{
-            //    // Target is within range.
-            //}
-
-
-            // Cast a ray where flick focus is???
-            RaycastHit2D[] hitDots = Physics2D.CircleCastAll(flickStartWORLD, swipeCircleRayCastRadius,
-                swipeDirection, swipeDistance);
-
-            // If it hits something...
-            if (hitDots.Length > 0)
-            {
-                foreach (var dot in hitDots)
-                {
-                    DotController swipedDot = dot.collider.GetComponent<DotController>();
-                    if (swipedDot != null) //TODO: why does raycast hit everything WTF!!!!
-                    {
-                        swipedDot.OnSwipe(swipeGesture.Direction);
-                        //dot.rigidbody.AddForce(forceofSwipe / swipeVelocityDividend, ForceMode2D.Impulse);
-                        dot.rigidbody.AddForce(forceofSwipe / 4, ForceMode2D.Impulse);
-
-                    }
-                }
-            }
+            // Default values of editor fields:
+            UPSwipeGestureDirectionThreshold = 1;
+            LeftRightDownSwipeGestureDirectionThreshold = 3;
+            DoubleTapTimeThreshold = 1;
         }
 
 
-     
-
-        private void SpawnDot(float xCoordDot, float yCoordDot)
-        {
-            //TODO: count dots in scene to set max first, make that a public field
-            GameObject dot = Instantiate(DotPrefab) as GameObject;
-            dot.transform.position = new Vector2(xCoordDot, yCoordDot);
-
-        }
-
-    
     }
 }

@@ -57,8 +57,8 @@ namespace SwordClash
                 //OnStateExit();
 
                 TentaControllerInstance.CurrentTentacleState = new ProjectileState(this,
-                    TentaControllerInstance.movePositionVelocity_TT_Requested,
-                    TentaControllerInstance.moveRotationAngle_TT_Requested);
+                    TentaControllerInstance.TTMovePositionVelocityRequested,
+                    TentaControllerInstance.TTMoveRotationAngleRequested);
             }
 
             // if juke-right input received, actaully juke right using TentacleController callback method
