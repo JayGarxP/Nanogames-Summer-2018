@@ -34,11 +34,12 @@ namespace SwordClash
         // RB2D.position units to teleport left<-- by, default is 1
         public float TTJukePosLeftAmount;
         //3 means 3 taps can happen in one 'strike' or projectile state
-        public float TTTimesAllowedToJuke; 
+        public float TTTimesAllowedToJuke;
+        // string tag that represents all gameobjects with JellyfishEnemy tag; used in collision handling
+        [SerializeField]
+        private string JellyfishEnemyGameObjectTag;
 
-        // Jellyfish gameobject references for collision handling, buggy as of 1/19/2019
-        public GameObject JellyfishEnemy;
-        public GameObject MovingJellyfishEnemy;
+
         // Sprite to change TentacleTip sprite into after colliding with jellyfish
         public Sprite TTStungSprite;
         #endregion
@@ -75,18 +76,13 @@ namespace SwordClash
             StartTentacleLength = TentacleReadyPosition.magnitude;
             maxTentacleLength = StartTentacleLength * 2; //TODO: fix maxtentacleLength solution
             StartTentacleRotation = TentacleTipRB2D.rotation;
-            //Collide with jellyfish event subscription
-            JelFishController = JellyfishEnemy.GetComponent<JellyfishController>();
-            JelFishController.JellyfishHitByTentacleTip_Event += Handle_JellyfishHitByTentacleTip_Event;
-            //TODO: child jellyfish in editor is NULL reference here... how avoid needing each controller instance??? Base class? Way for GetComponent to get ALL???
-            var bigJelFishController = MovingJellyfishEnemy.GetComponent<JellyfishController>();
-            bigJelFishController.JellyfishHitByTentacleTip_Event += Handle_JellyfishHitByTentacleTip_Event;
 
-            //Set sprite renderer reference so tentacle can change color
+
+            // Set sprite renderer reference so tentacle can change color
             TTSpriteRenderer = this.GetComponent<SpriteRenderer>();
             TTSceneSprite = TTSpriteRenderer.sprite;
 
-            //Redundant cast seems to help avoid null reference in update loop
+            // Redundant cast seems to help avoid null reference in update loop
             CurrentTentacleState = new CoiledState(((TentacleController)this));
         }
 
@@ -172,30 +168,11 @@ namespace SwordClash
             TentacleTipRB2D.position = currentPositionVector;
         }
 
-        private void OnDestroy()
-        {
-            //Unsubscribe from events
-            if (JelFishController != null)
-            {
-                JelFishController = JellyfishEnemy.GetComponent<JellyfishController>();
-                JelFishController.JellyfishHitByTentacleTip_Event -= Handle_JellyfishHitByTentacleTip_Event;
+        //private void OnDestroy()
+        //{
+          
+        //}
 
-            }
-        }
-
-        
-        //the subscriber class needs a reference to the publisher class in order to subscribe to its events.
-        void Handle_JellyfishHitByTentacleTip_Event(object sender, EventArgs a)
-        {
-            //if (! BarrelRoll_Flag)
-            //{
-            //    // Change color/ZAP! and reset state into recharging
-            //    m_SpriteRenderer.sprite = tentacleTipStung_Sprite;
-            //}
-            //Subscripe +=; Unsub -=;
-            //publisher.RaiseCustomEvent += HandleCustomEvent;  
-            //  publisher.RaiseCustomEvent -= HandleCustomEvent; 
-        }
         
         //TODO: rename methods to have Pleasefirst and remove the underscores
         //Juke to the right, eventaully will only work 3 times either way; called by player controller
@@ -239,6 +216,21 @@ namespace SwordClash
 
         }
 
+        // when the tentacle collides with any 2D trigger, poll the attached game objects tag and do stuff
+        void OnTriggerEnter2D(Collider2D col)
+        {
+            Debug.Log("HIT: " + col.gameObject.name + " : " + gameObject.name + " : " + Time.time);
+
+            // how avoid raw hardcoded string comparison? Get abstract base-class component?
+            //col.gameObject.
+            if (col.tag == JellyfishEnemyGameObjectTag)
+            {
+                // Change color/ZAP! and reset state into recharging
+                TTSpriteRenderer.sprite = TTStungSprite;
+            }
+        }
+
+
         public void ResetTentacleTipRotation()
         {
             TentacleTipRB2D.rotation = StartTentacleRotation;
@@ -264,6 +256,7 @@ namespace SwordClash
             TTJukePosLeftAmount = 1;
             TTJukePosRightAmount = 1;
             TTTimesAllowedToJuke = 3;
+            JellyfishEnemyGameObjectTag = "JellyfishEnemy";
         }
 
     }
