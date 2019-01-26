@@ -20,21 +20,28 @@ namespace SwordClash
         // initialize with new tentacle controller, first coil of game
         public CoiledState(TentacleController tsc) : base(tsc)
         {
-         
-
             OnStateEnter();
         }
 
         public override void OnStateEnter()
         {
-            //set all flags false
+            // set all flags false
             LowerAllInputFlags();
+
+            // Reset position and sprite of tentacle tip
+            TentaControllerInstance.TT_RecoilTentacle();
         }
 
         public override void OnStateExit()
         {
             //throw new NotImplementedException();
             
+        }
+
+        // ProjectileState hits many things
+        public override void HandleCollisionByTag(string ObjectHitTag)
+        {
+            // do nothing for now
         }
 
 

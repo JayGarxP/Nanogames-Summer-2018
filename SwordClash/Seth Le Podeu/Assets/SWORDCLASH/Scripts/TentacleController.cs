@@ -102,6 +102,11 @@ namespace SwordClash
 
         }
 
+        public void PleaseRecoilTentacle()
+        {
+            int ReelBack = (int)TentacleState.HotInputs.ReelBack;
+            CurrentTentacleState.RaiseTentacleFlag_Request(ReelBack);
+        }
         public void TT_RecoilTentacle()
         {
             ReelBack();
@@ -133,8 +138,9 @@ namespace SwordClash
         private void ReelBack()
         {
             // just teleport for now. Later change state.
-            TentacleTipRB2D.MovePosition(TentacleReadyPosition); 
-            TentacleTipRB2D.rotation = StartTentacleRotation;
+            TentacleTipRB2D.MovePosition(TentacleReadyPosition);
+            ResetTentacleTipRotation();
+            ResetTentacleTipSprite();
         }
 
         public float BarrelRollin_rotate(float degreesRotatedSoFar)
@@ -166,6 +172,16 @@ namespace SwordClash
         {
             Vector2 currentPositionVector = new Vector2(TentacleTipRB2D.position.x + xPositionUnitstoJump, TentacleTipRB2D.position.y);
             TentacleTipRB2D.position = currentPositionVector;
+        }
+
+        public void PleaseStingTentacleSprite()
+        {
+            ChangeTentacleSpritetoSting();
+        }
+        private void ChangeTentacleSpritetoSting()
+        {
+            // change sprite to StungSprite set in editor field
+            TTSpriteRenderer.sprite = TTStungSprite;
         }
 
         //private void OnDestroy()
@@ -209,25 +225,13 @@ namespace SwordClash
             return successfullyRaised;
         }
 
-        public void ReelInTentacle()
-        {
-            //ReelBack_Flag = true;
-            ResetTentacleTipSprite();
-
-        }
-
         // when the tentacle collides with any 2D trigger, poll the attached game objects tag and do stuff
         void OnTriggerEnter2D(Collider2D col)
         {
             Debug.Log("HIT: " + col.gameObject.name + " : " + gameObject.name + " : " + Time.time);
 
-            // how avoid raw hardcoded string comparison? Get abstract base-class component?
-            //col.gameObject.
-            if (col.tag == JellyfishEnemyGameObjectTag)
-            {
-                // Change color/ZAP! and reset state into recharging
-                TTSpriteRenderer.sprite = TTStungSprite;
-            }
+            // Handle Collision logic inside current tentacle state instance
+            CurrentTentacleState.HandleCollisionByTag(col.tag);
         }
 
 

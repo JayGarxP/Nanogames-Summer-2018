@@ -68,8 +68,23 @@ namespace SwordClash
         public override void OnStateExit()
         {
             //just teleport for now
-            TentaControllerInstance.TT_RecoilTentacle();
+            TentaControllerInstance.PleaseRecoilTentacle();
             LowerAllInputFlags();
+        }
+
+        // ProjectileState hits many things
+        public override void HandleCollisionByTag(string ObjectHitTag)
+        {
+            // Get stung and change sprite + recover
+            if (ObjectHitTag == JellyfishEnemyGameObjectTag)
+            {
+                // Change color/ZAP! also go into recovery state
+                TentaControllerInstance.PleaseStingTentacleSprite();
+            }
+            //else if (ObjectHitTag )
+            //{
+
+            //}
         }
 
         // WIP, See Game Design Doc for ProcessState's transition table

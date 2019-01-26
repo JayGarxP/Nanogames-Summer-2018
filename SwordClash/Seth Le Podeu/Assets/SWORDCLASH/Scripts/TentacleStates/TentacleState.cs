@@ -24,6 +24,9 @@ namespace SwordClash
         // mutex / semaphore??? should this be?
         protected bool IsCurrentlyProcessing;
 
+        // Game object tags used by collisions
+        protected string JellyfishEnemyGameObjectTag = "JellyfishEnemy";
+
         // HotInputs is a way to map input flags to ints, used by other classes to index into InputFlagArray
         public enum HotInputs
         {
@@ -128,6 +131,7 @@ namespace SwordClash
         public abstract void OnStateEnter();
         public abstract void OnStateExit();
         public abstract void ProcessState();
+        public abstract void HandleCollisionByTag(string ObjectHitTag);
     }
 
 

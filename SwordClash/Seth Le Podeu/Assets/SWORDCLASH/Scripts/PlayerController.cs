@@ -210,9 +210,8 @@ namespace SwordClash
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                //TODO: should be a Please() method
-                TentaController.ReelInTentacle();
-                
+                // Request to retract tentacle.
+                TentaController.PleaseRecoilTentacle();
             }
         }
 

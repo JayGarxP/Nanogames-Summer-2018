@@ -33,6 +33,18 @@ namespace SwordClash
             OnStateEnter();
         }
 
+        public override void HandleCollisionByTag(string ObjectHitTag)
+        {
+            if (ObjectHitTag == JellyfishEnemyGameObjectTag)
+            {
+                //TODO: whoop sound / dodge effect to show dodged jellyfish
+            }
+            //else if (ObjectHitTag )
+            //{
+
+            //}
+        }
+
         // Reset degrees rotated count to zero, and lower all input flags
         public override void OnStateEnter()
         {
