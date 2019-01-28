@@ -80,6 +80,10 @@ namespace SwordClash
             {
                 // Change color/ZAP! also go into recovery state
                 TentaControllerInstance.PleaseStingTentacleSprite();
+                // Play shock noise sound effect
+                SoundManagerScript.PlaySound("taser");
+                // change into RecoveryState
+                TentaControllerInstance.CurrentTentacleState = new RecoveryState(this);
             }
             //else if (ObjectHitTag )
             //{

@@ -184,12 +184,40 @@ namespace SwordClash
             TTSpriteRenderer.sprite = TTStungSprite;
         }
 
+
+        public void PleaseDarkenTentacleSprite()
+        {
+            TTSpriteRenderer.color = Color.black;
+        }
+
+
+        public void TT_WiggleBackToStartPosition()
+        {
+            // Higher floating point scalar multiplier means faster MoveTowards()
+            float step = 0.75f * Time.fixedDeltaTime;
+            // Move towards start position, slowly.
+            TentacleTipRB2D.position = Vector2.MoveTowards(TentacleTipRB2D.position, TentacleReadyPosition, step);
+            // Wiggle to and fro whilst returning to start
+           // Add small Xcoord value, Cos(time since game start) * tiny scaling factor, each frame
+           // Scaling factor is how far to move left or right each frame, 1 is the width of the sprite
+            TentacleTipRB2D.MovePosition( new Vector2(TentacleTipRB2D.position.x + ( Mathf.Cos(
+                Time.time) * 0.01f)
+                , TentacleTipRB2D.position.y));
+
+        }
+
+        // Return True means that yes, the tentacle tip is near start position
+        public bool CheckifTTAtStartPosition()
+        {
+            return (TentacleTipRB2D.position == TentacleReadyPosition);
+        }
+
         //private void OnDestroy()
         //{
-          
+
         //}
 
-        
+
         //TODO: rename methods to have Pleasefirst and remove the underscores
         //Juke to the right, eventaully will only work 3 times either way; called by player controller
         public void JukeRight_Please()
@@ -244,6 +272,8 @@ namespace SwordClash
         {
             //reset tentacle tip sprite to starting sprite; reference set in the Start() method
             TTSpriteRenderer.sprite = TTSceneSprite;
+            // default sprite color in Unity is white, undoing black burnt sprite from being zapped.
+            TTSpriteRenderer.color = Color.white;
         }
 
         // Monobehavior reset when component is first dropped into scene, set default editor fields here
