@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace SwordClash
 {
@@ -23,6 +24,11 @@ namespace SwordClash
             OnStateEnter();
         }
 
+        public override void HandleCollisionByTag(string ObjectHitTag, Rigidbody2D ObjectHitRB2D)
+        {
+            //throw new NotImplementedException();
+        }
+
         public override void OnStateEnter()
         {
             // set all flags false
@@ -38,11 +44,7 @@ namespace SwordClash
             
         }
 
-        // ProjectileState hits many things
-        public override void HandleCollisionByTag(string ObjectHitTag)
-        {
-            // do nothing for now
-        }
+       
 
 
         // compile Sandcastle XML comments with: -doc:DocFileName.xml 

@@ -6,17 +6,20 @@ using UnityEngine;
 
 namespace SwordClash
 {
-    class RecoveryState : TentacleState
+    class HoldingFoodState : TentacleState
     {
-        public RecoveryState(TentacleController tc) : base(tc)
+        private Rigidbody2D FoodHeld;
+
+        public HoldingFoodState(TentacleController tc) : base(tc)
         {
             OnStateEnter();
         }
 
-        // initialize with another state to enter recovery state
-        public RecoveryState(TentacleState oldState)
+        // initialize with another state to enter food holding state
+        public HoldingFoodState(TentacleState oldState, UnityEngine.Rigidbody2D foodToHold)
             : base(oldState.TentaControllerInstance)
         {
+            this.FoodHeld = foodToHold;
             OnStateEnter();
 
         }
@@ -28,8 +31,7 @@ namespace SwordClash
 
         public override void OnStateEnter()
         {
-            // change sprite to deflated
-            TentaControllerInstance.PleaseDarkenTentacleSprite();
+            TentaControllerInstance.TTPickupFood(FoodHeld);
 
         }
 
@@ -42,12 +44,16 @@ namespace SwordClash
 
         public override void ProcessState()
         {
-            // move towards start position slowly, while wiggling
-            TentaControllerInstance.TT_WiggleBackToStartPosition();
+            // move towards start position
+            TentaControllerInstance.TTMoveTowardsEatingZone(FoodHeld);
+
+
 
             // Check if made it home safe
-            if (TentaControllerInstance.CheckifTTAtStartPosition())
+            if (TentaControllerInstance.CheckifTTAtEatingPosition())
             {
+                // Scoring logic here
+
                 OnStateExit();
                 TentaControllerInstance.CurrentTentacleState = new CoiledState(this);
             }

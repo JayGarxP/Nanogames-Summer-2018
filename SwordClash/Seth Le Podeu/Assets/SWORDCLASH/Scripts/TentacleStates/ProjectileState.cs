@@ -73,7 +73,7 @@ namespace SwordClash
         }
 
         // ProjectileState hits many things
-        public override void HandleCollisionByTag(string ObjectHitTag)
+        public override void HandleCollisionByTag(string ObjectHitTag, UnityEngine.Rigidbody2D objectHit)
         {
             // Get stung and change sprite + recover
             if (ObjectHitTag == JellyfishEnemyGameObjectTag)
@@ -85,10 +85,11 @@ namespace SwordClash
                 // change into RecoveryState
                 TentaControllerInstance.CurrentTentacleState = new RecoveryState(this);
             }
-            //else if (ObjectHitTag )
-            //{
-
-            //}
+            else if (ObjectHitTag == FoodpickupGameObjectTag)
+            {
+                // Change state to HoldingFood and give reference to which food hit in constructor
+                TentaControllerInstance.CurrentTentacleState = new HoldingFoodState(this, objectHit);
+            }
         }
 
         // WIP, See Game Design Doc for ProcessState's transition table

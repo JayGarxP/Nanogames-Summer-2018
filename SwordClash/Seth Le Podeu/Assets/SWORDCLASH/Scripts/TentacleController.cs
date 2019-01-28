@@ -21,6 +21,8 @@ namespace SwordClash
         public float UPswipeSpeedModifier; 
         // how far tentacle can go before retracting, currently 1/19/19 ununused.
         public float maxTentacleLength;
+        // How far behind screen the eating zone is
+        public float EatingZoneOffsetFromStart;
         // Degrees to rotate tentacle tip per physics update, ~20 looks good.
         public float BarrelRollDegreestoRotatePerUpdate;
         // snowboard style degrees of rotation until barrel roll ends, two rotations = 720.
@@ -56,6 +58,8 @@ namespace SwordClash
         private Rigidbody2D TentacleTipRB2D;
         private float StartTentacleLength;
         private Vector2 TentacleReadyPosition;
+        // Where food is brought to die
+        private Vector2 TentacleEatingPosition; 
         private float StartTentacleRotation;
         private SpriteRenderer TTSpriteRenderer;
         private Sprite TTSceneSprite; //sprite object starts with
@@ -73,6 +77,7 @@ namespace SwordClash
         {
             TentacleTipRB2D = TentacleTip.GetComponent<Rigidbody2D>();
             TentacleReadyPosition = TentacleTipRB2D.position;
+            TentacleEatingPosition = new Vector2(TentacleReadyPosition.x, TentacleReadyPosition.y - EatingZoneOffsetFromStart);
             StartTentacleLength = TentacleReadyPosition.magnitude;
             maxTentacleLength = StartTentacleLength * 2; //TODO: fix maxtentacleLength solution
             StartTentacleRotation = TentacleTipRB2D.rotation;
@@ -109,7 +114,7 @@ namespace SwordClash
         }
         public void TT_RecoilTentacle()
         {
-            ReelBack();
+            ResetTentacletoStartingPosition();
         }
 
         
@@ -135,7 +140,7 @@ namespace SwordClash
             return TentacleTipRB2D.position.magnitude >= maxTentacleLength;
         }
 
-        private void ReelBack()
+        private void ResetTentacletoStartingPosition()
         {
             // just teleport for now. Later change state.
             TentacleTipRB2D.MovePosition(TentacleReadyPosition);
@@ -212,6 +217,30 @@ namespace SwordClash
             return (TentacleTipRB2D.position == TentacleReadyPosition);
         }
 
+        // Return True means that yes, the tentacle tip is near eating position
+        public bool CheckifTTAtEatingPosition()
+        {
+            return (TentacleTipRB2D.position == TentacleEatingPosition);
+        }
+
+        public void TTMoveTowardsEatingZone(Rigidbody2D moveMeAsWell)
+        {
+            // Move towards starting position each frame
+            TentacleTipRB2D.position = Vector2.MoveTowards(TentacleTipRB2D.position, TentacleEatingPosition, Time.fixedDeltaTime);
+            moveMeAsWell.position = Vector2.MoveTowards(moveMeAsWell.position, TentacleEatingPosition, Time.fixedDeltaTime);
+        }
+
+        public void TTPickupFood(Rigidbody2D foodTouching)
+        {
+            foodTouching.position = new Vector2(TentacleTipRB2D.position.x - 0.5f, TentacleTipRB2D.position.y + 0.5f);
+            IndicateHoldingFood();
+        }
+        private void IndicateHoldingFood()
+        {
+            // turn sprite a bit transparent, RGBa; Red Grn Blu alpha transparency, where 1,1,1 == white == default color
+            TTSpriteRenderer.color = new Color(1f, 1f, 1f, 0.4f);
+        }
+
         //private void OnDestroy()
         //{
 
@@ -259,7 +288,8 @@ namespace SwordClash
             Debug.Log("HIT: " + col.gameObject.name + " : " + gameObject.name + " : " + Time.time);
 
             // Handle Collision logic inside current tentacle state instance
-            CurrentTentacleState.HandleCollisionByTag(col.tag);
+            CurrentTentacleState.HandleCollisionByTag(col.tag, col.attachedRigidbody);
+            
         }
 
 
@@ -284,6 +314,7 @@ namespace SwordClash
             UPswipeSpeedConstant = 5;
             UPswipeSpeedModifier = -2;
             maxTentacleLength = 0;
+            EatingZoneOffsetFromStart = 2.5f;
             BarrelRollDegreestoRotatePerUpdate = 20.0f;
             BarrelRollEndSpinRotationDegrees = 720;
             TimesCanBarrelRoll = 2;

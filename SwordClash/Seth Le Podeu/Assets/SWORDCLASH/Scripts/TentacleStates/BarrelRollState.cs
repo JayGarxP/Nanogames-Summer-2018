@@ -33,7 +33,7 @@ namespace SwordClash
             OnStateEnter();
         }
 
-        public override void HandleCollisionByTag(string ObjectHitTag)
+        public override void HandleCollisionByTag(string ObjectHitTag, UnityEngine.Rigidbody2D objDodged)
         {
             if (ObjectHitTag == JellyfishEnemyGameObjectTag)
             {
