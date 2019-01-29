@@ -15,6 +15,8 @@ namespace SwordClash
         //      maybe the constructor uses a reference somehow??? Not sure how it works???????
         private Vector2 SwipeVelocityVector;
         private float SwipeAngle;
+        private short JukeCount;
+
         //BAD CODE; two concrete classes share same variables: put in base class???
         //  maintain object/fields in Controller that tracts these variables?
         //  Should barrel roll be sub-state of projectile somehow??? then lose collision code...
@@ -24,12 +26,13 @@ namespace SwordClash
         private float CurrentBrollDegreesRotated;
 
         // Enter barrel roll from Projectile State, still WIP, so XML comment is coming.
-        public BarrelRollState(TentacleState oldState, Vector2 swipeVelocityVector, float swipeAngle, short brollCount)
+        public BarrelRollState(TentacleState oldState, Vector2 swipeVelocityVector, float swipeAngle, short brollCount, short jukeCount)
               : base(oldState.TentaControllerInstance)
         {
             this.SwipeVelocityVector = swipeVelocityVector;
             this.SwipeAngle = swipeAngle;
             this.BarrelRollDuringThisProjectileCount = brollCount;
+            this.JukeCount = jukeCount;
             OnStateEnter();
         }
 
@@ -77,7 +80,7 @@ namespace SwordClash
                 OnStateExit();
                 //increment barrel roll count
                 BarrelRollDuringThisProjectileCount++;
-                TentaControllerInstance.CurrentTentacleState = new ProjectileState(this, SwipeVelocityVector, SwipeAngle, BarrelRollDuringThisProjectileCount);
+                TentaControllerInstance.CurrentTentacleState = new ProjectileState(this, SwipeVelocityVector, SwipeAngle, BarrelRollDuringThisProjectileCount, JukeCount);
             }
         }
     }

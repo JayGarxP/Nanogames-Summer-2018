@@ -34,18 +34,22 @@ namespace SwordClash
                 );
 
             OnStateEnter();
+            // Set JukeCount to zero
+            JukeCount = 0;
         }
 
         // initialize from BarrelRollState which increments BrollCount as side-effect; BAD CODE
         public ProjectileState(TentacleState oldState, Vector2 swipeVelocityVector, float swipeAngle, 
-            short BrollCount)
+            short BrollCount, short jukeCount)
             : base(oldState.TentaControllerInstance)
         {
             this.SwipeVelocityVector = swipeVelocityVector;
             this.SwipeAngle = swipeAngle;
             //check if in bad range here???
             //TODO: fix tight coupling of Moving and Barrel Roll state
-            this.BarrelRollCount = BrollCount; 
+            this.BarrelRollCount = BrollCount;
+            // BarrelRolling does NOT reset jukeCount
+            this.JukeCount = jukeCount;
             OnStateEnter();
 
         }
@@ -61,7 +65,7 @@ namespace SwordClash
             // Set actual tentacle movement vars, save the previous ones if needed
             //  not needed right now...
             LowerAllInputFlags();
-            JukeCount = 0;
+            
         }
 
         // Recoil Tentacle and lower all input flags.
@@ -104,7 +108,7 @@ namespace SwordClash
                 (InputFlagArray[(int)HotInputs.BarrelRoll]))
             {
                 TentaControllerInstance.CurrentTentacleState = new BarrelRollState(this, SwipeVelocityVector,
-                    SwipeAngle, BarrelRollCount);
+                    SwipeAngle, BarrelRollCount, JukeCount);
             }
             
 
