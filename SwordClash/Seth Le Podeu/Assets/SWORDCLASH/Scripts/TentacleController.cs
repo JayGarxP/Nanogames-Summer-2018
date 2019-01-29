@@ -37,13 +37,12 @@ namespace SwordClash
         public float TTJukePosLeftAmount;
         //3 means 3 taps can happen in one 'strike' or projectile state
         public float TTTimesAllowedToJuke;
-        // string tag that represents all gameobjects with JellyfishEnemy tag; used in collision handling
-        [SerializeField]
-        private string JellyfishEnemyGameObjectTag;
-
 
         // Sprite to change TentacleTip sprite into after colliding with jellyfish
         public Sprite TTStungSprite;
+        // Reference to game logic controller in scene
+        [SerializeField]
+        private GameLogicController GLCInstance;
         #endregion
 
         // Gang of Four State pattern, state machine for inputs allowed during tentacle movement
@@ -63,6 +62,7 @@ namespace SwordClash
         private float StartTentacleRotation;
         private SpriteRenderer TTSpriteRenderer;
         private Sprite TTSceneSprite; //sprite object starts with
+
 
 
         // Setup the component you are on right now (the "this" object); before all Start()s
@@ -223,6 +223,11 @@ namespace SwordClash
             return (TentacleTipRB2D.position == TentacleEatingPosition);
         }
 
+        public void TTEatFood()
+        {
+            GLCInstance.OnFoodEaten("Player1");
+        }
+
         public void TTMoveTowardsEatingZone(Rigidbody2D moveMeAsWell)
         {
             // Move towards starting position each frame
@@ -321,7 +326,6 @@ namespace SwordClash
             TTJukePosLeftAmount = 1;
             TTJukePosRightAmount = 1;
             TTTimesAllowedToJuke = 3;
-            JellyfishEnemyGameObjectTag = "JellyfishEnemy";
         }
 
     }

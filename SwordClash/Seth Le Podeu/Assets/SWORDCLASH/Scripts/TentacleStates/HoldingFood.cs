@@ -48,11 +48,11 @@ namespace SwordClash
             TentaControllerInstance.TTMoveTowardsEatingZone(FoodHeld);
 
 
-
             // Check if made it home safe
             if (TentaControllerInstance.CheckifTTAtEatingPosition())
             {
                 // Scoring logic here
+                TentaControllerInstance.TTEatFood();
 
                 OnStateExit();
                 TentaControllerInstance.CurrentTentacleState = new CoiledState(this);
