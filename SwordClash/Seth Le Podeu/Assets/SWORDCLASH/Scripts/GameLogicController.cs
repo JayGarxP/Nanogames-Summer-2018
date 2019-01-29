@@ -1,11 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 // SwordClash Game Logic Controller; needs some way to talk to Nanogames menu scene
 public class GameLogicController : MonoBehaviour
 {
     public short NumberofRounds;
+    public static int PlayerOneScoreUIVal = 0;
+    public Text PlayerOneScoreUIText;
+    public Text WinnerPopUpText;
 
     // Food tentacles fight over
     [SerializeField]
@@ -35,17 +39,17 @@ public class GameLogicController : MonoBehaviour
         // Zero out z coordinate, for some reason setting it to zero in ScreenToWorldPoint results in -10 for z...
         CenterCameraCoord.z = 0;
 
-        //SnackSprite = Snack.GetComponent<SpriteRenderer>();
-        //SnackBody = Snack.GetComponent<Rigidbody2D>();
-
         SpawnFoodInCenter();
+
+        WinnerPopUpText.text = "";
+        PlayerOneScoreUIText.text = "P1 Score: " + PlayerOneScoreUIVal;
+
 
     }
 
     //// Update is called once per frame
     //void Update()
     //{
-        
     //}
 
     // Monobehavior reset when component is first dropped into scene, set default editor fields here
@@ -81,10 +85,14 @@ public class GameLogicController : MonoBehaviour
         if (EaterPlayerID == "Player1")
         {
             PlayerOnePoints += 1;
+            PlayerOneScoreUIVal = PlayerOnePoints;
+            PlayerOneScoreUIText.text = "P1 Score: " + PlayerOneScoreUIVal;
+
         }
         else if (EaterPlayerID == "Player2")
         {
             PlayerTwoPoints += 1;
+            // no p2 yet
         }
         else
         {
@@ -97,6 +105,16 @@ public class GameLogicController : MonoBehaviour
         if (PlayerOnePoints >= pointsToWin)
         {
             // Player one wins!!!
+            WinnerPopUpText.text = EaterPlayerID + "  Wins!!!";
+            //TODO: remove wait, set speed to zero, ignore inputs and popup pause menu
+            StartCoroutine(WaitUnityCoroutine());
+            
+
+            PlayerOnePoints = 0;
+            PlayerTwoPoints = 0;
+            PlayerOneScoreUIVal = 0;
+            PlayerOneScoreUIText.text = "P1 Score: " + PlayerOneScoreUIVal;
+
         }
         else if (PlayerTwoPoints >= pointsToWin)
         {
@@ -105,6 +123,16 @@ public class GameLogicController : MonoBehaviour
 
         // Spawn in new food
         NextRoundFoodInCenter();
+    }
+
+
+    // Clear Winner PopUpText
+    IEnumerator WaitUnityCoroutine()
+    {
+        print(Time.time);
+        yield return new WaitForSeconds(3);
+        print(Time.time);
+        WinnerPopUpText.text = "";
     }
 
 }
