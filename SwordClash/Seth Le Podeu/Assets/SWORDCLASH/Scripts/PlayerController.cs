@@ -49,22 +49,7 @@ namespace SwordClash
             CreateSwipeGestures();
             CreateTapGesture();
 
-            // check if component is unattached or null here? Not sure best way to make tightly-coupled components know of each other
-            if (LeftTentacle != null)
-            {
-                TentaController = LeftTentacle.GetComponent<TentacleController>();
-                if (TentaController == null)
-                {
-                    // Message using rich text.
-                    Debug.Log("<color=red>GetComponent Error: </color>LeftTentacle's TentacleController not found");
-                }
-
-                TentacleTipStartPosition = TentaController.GetComponent<Rigidbody2D>().position;
-            }
-            else {
-                Debug.Log("<color=red>Error: </color>LeftTentacle not set in Editor!");
-            }
-
+            LeftTentacle = null;
         }
 
         ////FixedUpdate is called at a fixed interval and is independent of frame rate. Put physics code here.
@@ -73,10 +58,32 @@ namespace SwordClash
 
         //}
 
-        //void Update()
-        //{
+        void Update()
+        {
+            // Hack to keep player input non-bolt networked for now, object is null until it spawns in from
+            // NetworkCallbacks.cs Bolt Global
+            if (LeftTentacle == null)
+            {
+                LeftTentacle = GameObject.FindWithTag("TentacleTip");
+                // check if component is unattached or null here? Not sure best way to make tightly-coupled components know of each other
+                if (LeftTentacle != null && LeftTentacle.tag != "/")
+                {
+                    TentaController = LeftTentacle.GetComponent<TentacleController>();
+                    if (TentaController == null)
+                    {
+                        // Message using rich text.
+                        Debug.Log("<color=red>GetComponent Error: </color>LeftTentacle's TentacleController not found");
+                    }
 
-        //}
+                    TentacleTipStartPosition = TentaController.GetComponent<Rigidbody2D>().position;
+                }
+                else
+                {
+                    //Debug.Log("<color=red>Error: </color>LeftTentacle not set in Editor!");
+                    LeftTentacle = null;
+                }
+            }
+        }
 
         // after MonoBehavior.Update(); see https://docs.unity3d.com/Manual/ExecutionOrder.html
         private void LateUpdate()
