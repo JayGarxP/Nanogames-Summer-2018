@@ -39,6 +39,8 @@ namespace SwordClash
         
         private TentacleController TentaController;
         private Vector2 TentacleTipStartPosition;
+        private bool TTPrefabset;
+        private bool AmIPlayerTwo;
 
         // Use this for initialization
         void Start()
@@ -50,6 +52,8 @@ namespace SwordClash
             CreateTapGesture();
 
             LeftTentacle = null;
+            TTPrefabset = false;
+            AmIPlayerTwo = false;
         }
 
         ////FixedUpdate is called at a fixed interval and is independent of frame rate. Put physics code here.
@@ -62,9 +66,10 @@ namespace SwordClash
         {
             // Hack to keep player input non-bolt networked for now, object is null until it spawns in from
             // NetworkCallbacks.cs Bolt Global
-            if (LeftTentacle == null)
+            if (TTPrefabset == false)
             {
                 LeftTentacle = GameObject.FindWithTag("TentacleTip");
+                
                 // check if component is unattached or null here? Not sure best way to make tightly-coupled components know of each other
                 if (LeftTentacle != null && LeftTentacle.tag != "/")
                 {
@@ -74,13 +79,33 @@ namespace SwordClash
                         // Message using rich text.
                         Debug.Log("<color=red>GetComponent Error: </color>LeftTentacle's TentacleController not found");
                     }
-
-                    TentacleTipStartPosition = TentaController.GetComponent<Rigidbody2D>().position;
+                    else
+                    {
+                        TentacleTipStartPosition = TentaController.GetComponent<Rigidbody2D>().position;
+                        TTPrefabset = true;
+                    }
                 }
                 else
                 {
-                    //Debug.Log("<color=red>Error: </color>LeftTentacle not set in Editor!");
-                    LeftTentacle = null;
+                    // Maybe we are player two then...
+                  LeftTentacle = GameObject.FindWithTag("TentacleTipP2");
+                    if (LeftTentacle != null && LeftTentacle.tag != "/")
+                    {
+                        TentaController = LeftTentacle.GetComponent<TentacleController>();
+                        if (TentaController != null)
+                        {
+                            TentacleTipStartPosition = TentaController.GetComponent<Rigidbody2D>().position;
+                            TTPrefabset = true;
+                            AmIPlayerTwo = true;
+                            TentaController.PleaseMakeMePlayerTwo();
+                            
+                        }
+                        else
+                        {
+                            // Message using rich text.
+                            Debug.Log("<color=red>GetComponent Error: </color>LeftTentacle's TentacleController not found");
+                        }
+                    }
                 }
             }
         }

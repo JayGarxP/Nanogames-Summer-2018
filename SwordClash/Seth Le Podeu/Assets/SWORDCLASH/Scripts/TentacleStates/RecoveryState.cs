@@ -38,7 +38,10 @@ namespace SwordClash
             LowerAllInputFlags();
         }
 
-      
+        public override void ProcessCommand(TentacleInputCommand command)
+        {
+            throw new NotImplementedException();
+        }
 
         public override void ProcessState()
         {
@@ -51,6 +54,11 @@ namespace SwordClash
                 OnStateExit();
                 TentaControllerInstance.CurrentTentacleState = new CoiledState(this);
             }
+        }
+
+        public override void ProcessState(ITentacleInputCommandInput input)
+        {
+            throw new NotImplementedException();
         }
     }
 }

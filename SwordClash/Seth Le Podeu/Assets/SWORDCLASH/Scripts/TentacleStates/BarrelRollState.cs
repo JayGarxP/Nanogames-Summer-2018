@@ -60,9 +60,38 @@ namespace SwordClash
             LowerAllInputFlags();
         }
 
+        public override void ProcessCommand(TentacleInputCommand command)
+        {
+            throw new NotImplementedException();
+        }
+
         // Rotate, move at half speed while rotating, check if done rotating to return to moving state pass in barrelRoll
         // don't check any input flags, don't process any bad collision events, still do good ones tho
         public override void ProcessState()
+        {
+            // NOT Free to process here!
+            IsCurrentlyProcessing = true;
+
+            CurrentBrollDegreesRotated = TentaControllerInstance.BarrelRollin_rotate(CurrentBrollDegreesRotated);
+
+            // still move, but more slowly
+            TentaControllerInstance.TT_MoveTentacleTip_WhileBroll(SwipeVelocityVector);
+
+
+            // If the barrelroll is over; the total spin 360, 720, etc. has been overcome by degrees of rotation per frame
+            if (CurrentBrollDegreesRotated >= TentaControllerInstance.BarrelRollEndSpinRotationDegrees)
+            {
+                TentaControllerInstance.ResetTentacleTipRotation();
+                OnStateExit();
+                //increment barrel roll count
+                BarrelRollDuringThisProjectileCount++;
+                TentaControllerInstance.CurrentTentacleState = new ProjectileState(this, SwipeVelocityVector, SwipeAngle, BarrelRollDuringThisProjectileCount, JukeCount);
+            }
+        }
+
+
+        // Barrel Roll online input is same as single player barrel roll for now 2/11/2019
+        public override void ProcessState(ITentacleInputCommandInput input)
         {
             // NOT Free to process here!
             IsCurrentlyProcessing = true;

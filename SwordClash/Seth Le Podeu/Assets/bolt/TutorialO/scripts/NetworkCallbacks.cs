@@ -10,17 +10,18 @@ public class NetworkCallbacks : Bolt.GlobalEventListener
 {
     List<string> logMessages = new List<string>();
 
-    // Broadcast event so that PlayerController knows a tentacle is in scene
-    public event EventHandler RaiseTentacleTipSceneInstantiatedEvent;
+    // moving to ServerCallbacks.cs
+    //public override void SceneLoadLocalDone(string sceneName)
+    //{
+    //    // randomize a position; may have to convert to camera units??? how get camera ref??? move it after???
+    //    // probably will end up instantiating it, then moving it to start position later, will hardcode for now
+    //    // has weird values to account for sceneName's off (000) camera placement
+    //    var spawnPosition = new Vector3(-1.5f, -5.8f, 0);
 
-    public override void SceneLoadLocalDone(string sceneName)
-    {
-        // randomize a position; may have to convert to camera units???
-        var spawnPosition = new Vector3(UnityEngine.Random.Range(-2, 2), UnityEngine.Random.Range(-2, 2), 0);
 
-        // instantiate cube; all BoltPrefabs are accessed through a static class
-       BoltNetwork.Instantiate(BoltPrefabs.TentacleTipScene, spawnPosition, Quaternion.identity);
-    }
+    //    // instantiate cube; all BoltPrefabs are accessed through a static class
+    //   BoltNetwork.Instantiate(BoltPrefabs.TentacleTip_Scene, spawnPosition, Quaternion.identity);
+    //}
 
     public override void OnEvent(LogEventjp evnt)
     {

@@ -50,6 +50,7 @@ public class GameLogicController : MonoBehaviour
     //// Update is called once per frame
     //void Update()
     //{
+
     //}
 
     // Monobehavior reset when component is first dropped into scene, set default editor fields here

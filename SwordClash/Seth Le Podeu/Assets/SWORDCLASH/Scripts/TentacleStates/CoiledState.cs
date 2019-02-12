@@ -44,7 +44,36 @@ namespace SwordClash
             
         }
 
-       
+        // After ProcessState sets the Bolt Command input, ProcessCommand does stuff in-game
+        public override void ProcessCommand(TentacleInputCommand command)
+        {
+            if (AmIPlayerTwo)
+            {
+                TentaControllerInstance.TTChangeTentacleSpritetoPlayerTwo();
+            }
+
+
+            //// if player up-swipe, they tryna  *L A U N C H*
+            //if (InputFlagArray[(int)HotInputs.LaunchSwipe])
+            //{
+            //    TentaControllerInstance.CurrentTentacleState = new ProjectileState(this,
+            //        TentaControllerInstance.TTMovePositionVelocityRequested,
+            //        TentaControllerInstance.TTMoveRotationAngleRequested);
+            //}
+
+            // if juke-right input received, actaully juke right using TentacleController callback method
+            if (command.Input.RightTap)
+            {
+                TentaControllerInstance.TT_JumpRight(); //TODO: make seperate jump methods for coiled jumps
+            }
+            else if (command.Input.RightTap)
+            {
+                TentaControllerInstance.TT_JumpLeft();
+               
+            }
+        }
+
+
 
 
         // compile Sandcastle XML comments with: -doc:DocFileName.xml 
@@ -57,14 +86,18 @@ namespace SwordClash
         /// </remarks>
         public override void ProcessState()
         {
-            //Coiled States ProcessState does NOT block flag changes while executing.
+            // Coiled States ProcessState does NOT block flag changes while executing.
             IsCurrentlyProcessing = false;
 
-            //if player up-swipe, they tryna  *L A U N C H*
+            if (AmIPlayerTwo)
+            {
+                TentaControllerInstance.TTChangeTentacleSpritetoPlayerTwo();
+            }
+
+
+            // if player up-swipe, they tryna  *L A U N C H*
             if (InputFlagArray[(int)HotInputs.LaunchSwipe])
             {
-                //OnStateExit();
-
                 TentaControllerInstance.CurrentTentacleState = new ProjectileState(this,
                     TentaControllerInstance.TTMovePositionVelocityRequested,
                     TentaControllerInstance.TTMoveRotationAngleRequested);
@@ -86,6 +119,42 @@ namespace SwordClash
             
             }
 
+        public override void ProcessState(ITentacleInputCommandInput input)
+        {
+            // Coiled States ProcessState does NOT block flag changes while executing.
+            IsCurrentlyProcessing = false;
+
+            if (AmIPlayerTwo)
+            {
+                TentaControllerInstance.TTChangeTentacleSpritetoPlayerTwo();
+            }
+
+
+            // if player up-swipe, they tryna  *L A U N C H*
+            if (InputFlagArray[(int)HotInputs.LaunchSwipe])
+            {
+                //input.
+                //TentaControllerInstance.CurrentTentacleState = new ProjectileState(this,
+                //    TentaControllerInstance.TTMovePositionVelocityRequested,
+                //    TentaControllerInstance.TTMoveRotationAngleRequested);
+            }
+
+            // if juke-right input received, actaully juke right using TentacleController callback method
+            if (InputFlagArray[(int)HotInputs.RudderRight])
+            {
+                //TODO: make seperate jump methods for coiled jumps
+                //TentaControllerInstance.TT_JumpRight(); 
+                input.RightTap = true;
+                InputFlagArray[(int)HotInputs.RudderRight] = false;
+            }
+            else if (InputFlagArray[(int)HotInputs.RudderLeft])
+            {
+                //TentaControllerInstance.TT_JumpLeft();
+                input.LeftTap = true;
+                InputFlagArray[(int)HotInputs.RudderLeft] = false;
+
+            }
+        }
     }
 
    

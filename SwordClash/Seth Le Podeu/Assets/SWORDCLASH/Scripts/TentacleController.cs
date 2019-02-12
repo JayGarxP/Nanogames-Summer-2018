@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using Bolt;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,7 +7,7 @@ namespace SwordClash
     /// <summary>  
     ///  Controls how the tentacle responds to Input, how it is drawn, and how it collides with things.
     /// </summary>  
-    public class TentacleController : MonoBehaviour
+    public class TentacleController : Bolt.EntityEventListener<ITentacleTipState>
     {
         #region PUBLIC EDITOR FIELDS
         //TODO: make these private with [SerializeField] atrribute so they still appear in editor
@@ -18,7 +16,7 @@ namespace SwordClash
         // constant speed of tentacle
         public float UPswipeSpeedConstant;
         // Added to constant speed of tentacle
-        public float UPswipeSpeedModifier; 
+        public float UPswipeSpeedModifier;
         // how far tentacle can go before retracting, currently 1/19/19 ununused.
         public float maxTentacleLength;
         // How far behind screen the eating zone is
@@ -28,7 +26,7 @@ namespace SwordClash
         // snowboard style degrees of rotation until barrel roll ends, two rotations = 720.
         public float BarrelRollEndSpinRotationDegrees;
         // 2 times means each up-swipe launch player gets two barrel rolls, reset once coiled
-        public short TimesCanBarrelRoll; 
+        public short TimesCanBarrelRoll;
         // real-time readout of tentacleTip's RB2D rotation value, will remove in future update
         public Text RotationValue_UI_Text;
         // RB2D.position units to teleport right--> by, 1 is default
@@ -40,6 +38,8 @@ namespace SwordClash
 
         // Sprite to change TentacleTip sprite into after colliding with jellyfish
         public Sprite TTStungSprite;
+
+        public Sprite TTPlayerTwoSprite;
         // Reference to game logic controller in scene
         [SerializeField]
         private GameLogicController GLCInstance;
@@ -52,16 +52,19 @@ namespace SwordClash
 
         // for training mode 'ghosts', possibly save last input swipe?
         public Vector2 TTMovePositionVelocityRequested;
-        public float TTMoveRotationAngleRequested; 
+        public float TTMoveRotationAngleRequested;
 
         private Rigidbody2D TentacleTipRB2D;
         private float StartTentacleLength;
         private Vector2 TentacleReadyPosition;
         // Where food is brought to die
-        private Vector2 TentacleEatingPosition; 
+        private Vector2 TentacleEatingPosition;
         private float StartTentacleRotation;
         private SpriteRenderer TTSpriteRenderer;
         private Sprite TTSceneSprite; //sprite object starts with
+
+        //private bool AmIPlayerTwo;
+
 
 
 
@@ -70,11 +73,53 @@ namespace SwordClash
         {
             //MovePositionVelocity_TT_Active = Vector2.zero;
             StartTentacleLength = 0;
+            //AmIPlayerTwo = false;
         }
 
-        // Use this for initialization; Here you setup things that depend on other components.
-        void Start()
+        //// Use this for initialization; Here you setup things that depend on other components.
+        //void Start()
+        //{
+        //        var GameWorld = GameObject.FindWithTag("GameWorld");
+        //    // check if component is unattached or null here? Not sure best way to make tightly-coupled components know of each other
+        //    if (GameWorld != null && GameWorld.tag != "/")
+        //    {
+        //        GLCInstance = GameWorld.GetComponent<GameLogicController>();
+        //        if (GLCInstance == null)
+        //        {
+        //            // bad thing happen
+        //        }
+        //    }
+
+        //    TentacleTipRB2D = TentacleTip.GetComponent<Rigidbody2D>();
+        //    TentacleReadyPosition = TentacleTipRB2D.position;
+        //    TentacleEatingPosition = new Vector2(TentacleReadyPosition.x, TentacleReadyPosition.y - EatingZoneOffsetFromStart);
+        //    StartTentacleLength = TentacleReadyPosition.magnitude;
+        //    maxTentacleLength = StartTentacleLength * 2; //TODO: fix maxtentacleLength solution
+        //    StartTentacleRotation = TentacleTipRB2D.rotation;
+
+
+        //    // Set sprite renderer reference so tentacle can change color
+        //    TTSpriteRenderer = this.GetComponent<SpriteRenderer>();
+        //    TTSceneSprite = TTSpriteRenderer.sprite;
+
+        //    // Redundant cast seems to help avoid null reference in update loop
+        //    CurrentTentacleState = new CoiledState(((TentacleController)this));
+        //}
+
+        // BoltNetwork Start()
+        public override void Attached()
         {
+            var GameWorld = GameObject.FindWithTag("GameWorld");
+            // check if component is unattached or null here? Not sure best way to make tightly-coupled components know of each other
+            if (GameWorld != null && GameWorld.tag != "/")
+            {
+                GLCInstance = GameWorld.GetComponent<GameLogicController>();
+                if (GLCInstance == null)
+                {
+                    // bad thing happen
+                }
+            }
+
             TentacleTipRB2D = TentacleTip.GetComponent<Rigidbody2D>();
             TentacleReadyPosition = TentacleTipRB2D.position;
             TentacleEatingPosition = new Vector2(TentacleReadyPosition.x, TentacleReadyPosition.y - EatingZoneOffsetFromStart);
@@ -84,40 +129,89 @@ namespace SwordClash
 
 
             // Set sprite renderer reference so tentacle can change color
-            TTSpriteRenderer = this.GetComponent<SpriteRenderer>();
+            TTSpriteRenderer = GetComponent<SpriteRenderer>();
             TTSceneSprite = TTSpriteRenderer.sprite;
 
             // Redundant cast seems to help avoid null reference in update loop
-            CurrentTentacleState = new CoiledState(((TentacleController)this));
+            this.CurrentTentacleState = new CoiledState(((TentacleController)this));
+
+
+            // Bolt Entity Transform sync
+            this.state.SetTransforms(this.state.TTTransform, this.transform);
+
         }
 
-        // Update is called once per frame
-        void Update()
+        // BoltNetwork Update()
+        // is used to collect inputs from your game and putting it into a Command. 
+        // SimulateController executes one time per frame.
+        public override void SimulateController()
         {
-           // RotationValue_UI_Text.text = UI_RotationValue;
-        }
 
-        //TODO: understand the differences between each update loop, and best practices.
-        void FixedUpdate()
-        {
-            if (CurrentTentacleState != null)
+
+            // IrigidbodyPlayerCommandInput input = rigidbodyPlayerCommand.Create();
+            ITentacleInputCommandInput input = TentacleInputCommand.Create();
+            
+
+            if (this.CurrentTentacleState != null)
             {
-                CurrentTentacleState.ProcessState();
+                // Actual game loop logic code, contained in each ProcessState() method of concrete TentacleState s 
+                // change values of input
+                this.CurrentTentacleState.ProcessState(input);
             }
 
+            this.entity.QueueInput(input);
+
         }
+
+
+        public override void ExecuteCommand(Command command, bool resetState)
+        {
+            TentacleInputCommand cmd = (TentacleInputCommand)command;
+
+            if (BoltNetwork.IsServer)
+            {
+                this.CurrentTentacleState.ProcessCommand(cmd);
+            }
+
+            //transform.GetChild(0).GetChild(3).transform.rotation = Quaternion.LookRotation(cmd.Input.lookDirection);
+
+        }
+
+
+
+        //// Update is called once per frame
+        //void Update()
+        //{
+
+        //}
+
+        //void FixedUpdate()
+        //{
+        //    if (this.CurrentTentacleState != null)
+        //    {
+        //        // Actual game loop logic code, contained in each ProcessState() method of concrete TentacleState s 
+        //        this.CurrentTentacleState.ProcessState();
+        //    }
+
+
+        //    //    if (entity.isControllerOrOwner == false)
+        //    //    {
+        //    //        transform.GetChild(0).GetChild(3).transform.rotation = state.lookRotation;
+        //    //    }
+
+        //}
 
         public void PleaseRecoilTentacle()
         {
             int ReelBack = (int)TentacleState.HotInputs.ReelBack;
-            CurrentTentacleState.RaiseTentacleFlag_Request(ReelBack);
+            this.CurrentTentacleState.RaiseTentacleFlag_Request(ReelBack);
         }
         public void TT_RecoilTentacle()
         {
             ResetTentacletoStartingPosition();
         }
 
-        
+
         public void TT_MoveTentacleTip(Vector2 swipePositionVelocity, float swipeAngle)
         {
             //be careful! if physics update is not finished and you MovePosition() in same update frame, unexpected behavior will occur!
@@ -130,10 +224,10 @@ namespace SwordClash
         public void TT_MoveTentacleTip_WhileBroll(Vector2 swipePositionVelocity)
         {
             //Move at half delta time speed ~around sqrt the normal speed. Do not rotate, rotate seperately in another method.
-        TentacleTipRB2D.MovePosition(TentacleTipRB2D.position + (swipePositionVelocity * (Time.fixedDeltaTime* 0.5f)));
+            TentacleTipRB2D.MovePosition(TentacleTipRB2D.position + (swipePositionVelocity * (Time.fixedDeltaTime * 0.5f)));
         }
 
-            
+
 
         public bool IsTentacleAtMaxExtension()
         {
@@ -156,7 +250,7 @@ namespace SwordClash
             return degreesRotatedSoFar;
         }
 
-        //For now is x position '-' instead of rights '+'; but juking may change in future, so leave as
+        // For now is x position '-' instead of rights '+'; but juking may change in future, so leave as
         // two seperate methods.
         public void TT_JumpLeft()
         {
@@ -168,7 +262,7 @@ namespace SwordClash
             TentacleTipRB2D.position = currentPositionVector;
         }
 
-        //called from fixed update, inside a state's ProcessState() method.
+        // called from fixed update, inside a state's ProcessState() method.
         public void TT_JumpRight()
         {
             TentacleTip_JumpRight(TTJukePosRightAmount);
@@ -189,10 +283,21 @@ namespace SwordClash
             TTSpriteRenderer.sprite = TTStungSprite;
         }
 
+        public void TTChangeTentacleSpritetoPlayerTwo()
+        {
+            // change sprite to p2 set in editor field inside inspector view of Tentacle_Tip
+            TTSpriteRenderer.sprite = TTPlayerTwoSprite;
+        }
+
 
         public void PleaseDarkenTentacleSprite()
         {
             TTSpriteRenderer.color = Color.black;
+        }
+
+        public void PleaseMakeMePlayerTwo()
+        {
+            this.CurrentTentacleState.AmIPlayerTwo = true;
         }
 
 
@@ -203,9 +308,9 @@ namespace SwordClash
             // Move towards start position, slowly.
             TentacleTipRB2D.position = Vector2.MoveTowards(TentacleTipRB2D.position, TentacleReadyPosition, step);
             // Wiggle to and fro whilst returning to start
-           // Add small Xcoord value, Cos(time since game start) * tiny scaling factor, each frame
-           // Scaling factor is how far to move left or right each frame, 1 is the width of the sprite
-            TentacleTipRB2D.MovePosition( new Vector2(TentacleTipRB2D.position.x + ( Mathf.Cos(
+            // Add small Xcoord value, Cos(time since game start) * tiny scaling factor, each frame
+            // Scaling factor is how far to move left or right each frame, 1 is the width of the sprite
+            TentacleTipRB2D.MovePosition(new Vector2(TentacleTipRB2D.position.x + (Mathf.Cos(
                 Time.time) * 0.01f)
                 , TentacleTipRB2D.position.y));
 
@@ -258,13 +363,13 @@ namespace SwordClash
         {
             //Use InputFlag enum in tentacle state to raise correct flag, casted to int
             int RudderRight = (int)TentacleState.HotInputs.RudderRight;
-            CurrentTentacleState.RaiseTentacleFlag_Request(RudderRight);
+            this.CurrentTentacleState.RaiseTentacleFlag_Request(RudderRight);
         }
         //TODO: spawn bubbles on Right side; spawn bubs on left for JukeRight()
         public void JukeLeft_Please()
         {
             int RudderLeft = (int)TentacleState.HotInputs.RudderLeft;
-            CurrentTentacleState.RaiseTentacleFlag_Request(RudderLeft);
+            this.CurrentTentacleState.RaiseTentacleFlag_Request(RudderLeft);
         }
 
         public void LaunchTentacle_Please(Vector2 SwipeDirectionVector, float SwipeAngle_Unity)
@@ -275,26 +380,26 @@ namespace SwordClash
             TTMoveRotationAngleRequested = SwipeAngle_Unity;
 
             int LaunchTentFlagID = (int)TentacleState.HotInputs.LaunchSwipe;
-            CurrentTentacleState.RaiseTentacleFlag_Request(LaunchTentFlagID);
+            this.CurrentTentacleState.RaiseTentacleFlag_Request(LaunchTentFlagID);
         }
 
 
         public bool BarrelRoll_Please()
         {
             int barrelRollFlagID = (int)TentacleState.HotInputs.BarrelRoll;
-            bool successfullyRaised = 
-            CurrentTentacleState.RaiseTentacleFlag_Request(barrelRollFlagID);
+            bool successfullyRaised =
+            this.CurrentTentacleState.RaiseTentacleFlag_Request(barrelRollFlagID);
             return successfullyRaised;
         }
 
         // when the tentacle collides with any 2D trigger, poll the attached game objects tag and do stuff
         void OnTriggerEnter2D(Collider2D col)
         {
-            Debug.Log("HIT: " + col.gameObject.name + " : " + gameObject.name + " : " + Time.time);
+            Debug.Log("HIT: " + col.gameObject.name + " : " + this.gameObject.name + " : " + Time.time);
 
             // Handle Collision logic inside current tentacle state instance
-            CurrentTentacleState.HandleCollisionByTag(col.tag, col.attachedRigidbody);
-            
+            this.CurrentTentacleState.HandleCollisionByTag(col.tag, col.attachedRigidbody);
+
         }
 
 

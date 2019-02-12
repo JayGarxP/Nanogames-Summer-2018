@@ -159,5 +159,15 @@ namespace SwordClash
             //Return velocity vector with [x*=speed, y*=speed]
             return new Vector2(DirectionVector.x * speed, DirectionVector.y * speed);
         }
+
+        public override void ProcessState(ITentacleInputCommandInput input)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void ProcessCommand(TentacleInputCommand command)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

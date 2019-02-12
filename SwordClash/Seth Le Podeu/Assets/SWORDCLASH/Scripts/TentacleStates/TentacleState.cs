@@ -20,6 +20,7 @@ namespace SwordClash
           The tentaclecontroller responds in different ways to the same inputs (same flags) depending on tentacle state machine, see Game Design Doc. 
              */
 
+        public bool AmIPlayerTwo;
 
         // mutex / semaphore??? should this be?
         protected bool IsCurrentlyProcessing;
@@ -67,6 +68,7 @@ namespace SwordClash
         {
             TentaControllerInstance = tc;
             IsCurrentlyProcessing = false;
+            AmIPlayerTwo = false;
 
             // initialize input flag array to length of InputFlag_Enum, default value is false.
             InputFlagCount = Enum.GetNames(typeof(HotInputs)).Length;
@@ -132,6 +134,8 @@ namespace SwordClash
         public abstract void OnStateEnter();
         public abstract void OnStateExit();
         public abstract void ProcessState();
+        public abstract void ProcessState(ITentacleInputCommandInput input);
+        public abstract void ProcessCommand(TentacleInputCommand command);
         public abstract void HandleCollisionByTag(string ObjectHitTag, UnityEngine.Rigidbody2D ObjectHitRB2D);
     }
 
