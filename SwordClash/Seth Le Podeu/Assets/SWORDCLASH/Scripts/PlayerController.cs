@@ -145,26 +145,29 @@ namespace SwordClash
 
         private void TapGestureCallback(DigitalRubyShared.GestureRecognizer gesture)
         {
-            if (gesture.State == GestureRecognizerState.Ended)
+            if (TentaController != null)
             {
-                // Code to do something where player touched, show bubbles/sparkles like in Shadowverse for example.
-                //Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
-                //SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
-
-                // CameraScaledWidth lines up nicely with gesture.Focus units somehow...
-                float screeenWidth = CameraReference.scaledPixelWidth;
-                screeenWidth = screeenWidth / 2.0f;
-
-                //Determine what side of screen is tapped, 'juke' to that side.
-                if (gesture.FocusX >= screeenWidth)
+                if (gesture.State == GestureRecognizerState.Ended)
                 {
-                    TentaController.JukeRight_Please();
+                    // Code to do something where player touched, show bubbles/sparkles like in Shadowverse for example.
+                    //Vector2 touchPosinWorldSpace = CameraReference.ScreenToWorldPoint(new Vector2(gesture.FocusX, gesture.FocusY));
+                    //SpawnDot(touchPosinWorldSpace.x, touchPosinWorldSpace.y);
+
+                    // CameraScaledWidth lines up nicely with gesture.Focus units somehow...
+                    float screeenWidth = CameraReference.scaledPixelWidth;
+                    screeenWidth = screeenWidth / 2.0f;
+
+                    //Determine what side of screen is tapped, 'juke' to that side.
+                    if (gesture.FocusX >= screeenWidth)
+                    {
+                        TentaController.JukeRight_Please();
+                    }
+                    else
+                    {
+                        TentaController.JukeLeft_Please();
+                    }
                 }
-                else
-                {
-                    TentaController.JukeLeft_Please();
-                }
-             }
+            }
         }
 
         private void CreateDoubleTapGesture()

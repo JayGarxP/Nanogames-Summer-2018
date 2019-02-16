@@ -10,6 +10,10 @@ namespace SwordClash
     public class CoiledState : TentacleState
     {
 
+        // Can't do anything until finished with side-to-side movement
+        bool CurrentlyJuking;
+        Vector2 WhereJumpingTo;
+
         // initialize with another state, resuming coiled state
         public CoiledState(TentacleState oldState)
             :base(oldState.TentaControllerInstance)
@@ -33,6 +37,7 @@ namespace SwordClash
         {
             // set all flags false
             LowerAllInputFlags();
+            CurrentlyJuking = false;
 
             // Reset position and sprite of tentacle tip
             TentaControllerInstance.TT_RecoilTentacle();
@@ -43,37 +48,6 @@ namespace SwordClash
             //throw new NotImplementedException();
             
         }
-
-        // After ProcessState sets the Bolt Command input, ProcessCommand does stuff in-game
-        public override void ProcessCommand(TentacleInputCommand command)
-        {
-            if (AmIPlayerTwo)
-            {
-                TentaControllerInstance.TTChangeTentacleSpritetoPlayerTwo();
-            }
-
-
-            //// if player up-swipe, they tryna  *L A U N C H*
-            //if (InputFlagArray[(int)HotInputs.LaunchSwipe])
-            //{
-            //    TentaControllerInstance.CurrentTentacleState = new ProjectileState(this,
-            //        TentaControllerInstance.TTMovePositionVelocityRequested,
-            //        TentaControllerInstance.TTMoveRotationAngleRequested);
-            //}
-
-            // if juke-right input received, actaully juke right using TentacleController callback method
-            if (command.Input.RightTap)
-            {
-                TentaControllerInstance.TT_JumpRight(); //TODO: make seperate jump methods for coiled jumps
-            }
-            else if (command.Input.RightTap)
-            {
-                TentaControllerInstance.TT_JumpLeft();
-               
-            }
-        }
-
-
 
 
         // compile Sandcastle XML comments with: -doc:DocFileName.xml 
@@ -103,18 +77,18 @@ namespace SwordClash
                     TentaControllerInstance.TTMoveRotationAngleRequested);
             }
 
-            // if juke-right input received, actaully juke right using TentacleController callback method
-            if (InputFlagArray[(int)HotInputs.RudderRight])
-            {
-                TentaControllerInstance.TT_JumpRight(); //TODO: make seperate jump methods for coiled jumps
-                InputFlagArray[(int)HotInputs.RudderRight] = false;
-            }
-            else if (InputFlagArray[(int)HotInputs.RudderLeft])
-            {
-                TentaControllerInstance.TT_JumpLeft();
-                InputFlagArray[(int)HotInputs.RudderLeft] = false;
+            //// if juke-right input received, actaully juke right using TentacleController callback method
+            //if (InputFlagArray[(int)HotInputs.RudderRight])
+            //{
+            //    TentaControllerInstance.TT_JumpRight(); //TODO: make seperate jump methods for coiled jumps
+            //    InputFlagArray[(int)HotInputs.RudderRight] = false;
+            //}
+            //else if (InputFlagArray[(int)HotInputs.RudderLeft])
+            //{
+            //    TentaControllerInstance.TT_JumpLeft();
+            //    InputFlagArray[(int)HotInputs.RudderLeft] = false;
 
-            }
+            //}
 
             
             }
@@ -142,21 +116,60 @@ namespace SwordClash
             // if juke-right input received, actaully juke right using TentacleController callback method
             if (InputFlagArray[(int)HotInputs.RudderRight])
             {
-                //TODO: make seperate jump methods for coiled jumps
-                //TentaControllerInstance.TT_JumpRight(); 
                 input.RightTap = true;
                 InputFlagArray[(int)HotInputs.RudderRight] = false;
             }
             else if (InputFlagArray[(int)HotInputs.RudderLeft])
             {
-                //TentaControllerInstance.TT_JumpLeft();
                 input.LeftTap = true;
                 InputFlagArray[(int)HotInputs.RudderLeft] = false;
 
             }
         }
+
+
+        // After ProcessState sets the Bolt Command input, ProcessCommand does stuff in-game
+        public override void ProcessCommand(TentacleInputCommand command)
+        {
+            if (AmIPlayerTwo)
+            {
+                TentaControllerInstance.TTChangeTentacleSpritetoPlayerTwo();
+            }
+
+            // Only accept input if NOT in middle of animation
+            if (CurrentlyJuking == false)
+            {
+                //// if player up-swipe, they tryna  *L A U N C H*
+                //if (InputFlagArray[(int)HotInputs.LaunchSwipe])
+                //{
+                //    TentaControllerInstance.CurrentTentacleState = new ProjectileState(this,
+                //        TentaControllerInstance.TTMovePositionVelocityRequested,
+                //        TentaControllerInstance.TTMoveRotationAngleRequested);
+                //}
+
+
+                // if juke-right input received, actaully juke right using TentacleController callback method
+                if (command.Input.RightTap || command.Input.LeftTap)
+                {
+                    CurrentlyJuking = true;
+                    // false parameter to jump RIGHT, true parameter to jump LEFT
+                    WhereJumpingTo = TentaControllerInstance.TT_CalculateEndJumpPosition(command.Input.LeftTap);
+                    // Set CurrentlyJuking to true if still need to keep moving, when done juking set CurrentlyJuking to false
+                    CurrentlyJuking = TentaControllerInstance.TT_JumpSideways(WhereJumpingTo);
+                }
+                
+
+            }
+            else
+            {
+                // Still currently juking
+                CurrentlyJuking = TentaControllerInstance.TT_JumpSideways(WhereJumpingTo);
+            }
+        }
+
+
+
+
+
     }
-
-   
-
 }

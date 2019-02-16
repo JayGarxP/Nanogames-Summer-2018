@@ -33,6 +33,9 @@ namespace SwordClash
         public float TTJukePosRightAmount;
         // RB2D.position units to teleport left<-- by, default is 1
         public float TTJukePosLeftAmount;
+        // How fast to Juke, multiplied by fixedDeltaTime
+        public float TTJumpSpeed;
+
         //3 means 3 taps can happen in one 'strike' or projectile state
         public float TTTimesAllowedToJuke;
 
@@ -250,29 +253,50 @@ namespace SwordClash
             return degreesRotatedSoFar;
         }
 
+        // pass in true to jump left, false to get a jump right end position vector as return value
+        public Vector2 TT_CalculateEndJumpPosition( bool YesJumpingLeft)
+        {
+            Vector2 whereToJumpTo;
+
+            if (YesJumpingLeft)
+            {
+                whereToJumpTo = new Vector2(TentacleTipRB2D.position.x - TTJukePosLeftAmount, TentacleTipRB2D.position.y);
+
+            }
+            else
+            {
+                // jumping right
+                whereToJumpTo = new Vector2(TentacleTipRB2D.position.x + TTJukePosRightAmount, TentacleTipRB2D.position.y);
+            }
+
+            return whereToJumpTo;
+        }
+
         // For now is x position '-' instead of rights '+'; but juking may change in future, so leave as
         // two seperate methods.
-        public void TT_JumpLeft()
+        public bool TT_JumpSideways(Vector2 endOfJumpPosition)
         {
-            TentacleTip_JumpLeft(TTJukePosLeftAmount);
+            //Vector2 whereToJumpTo = new Vector2(TentacleTipRB2D.position.x - TTJukePosLeftAmount, TentacleTipRB2D.position.y);
+            
+                TentacleTip_JumpSideways(endOfJumpPosition);
+
+            bool HaventReachedEndJumpPosition = true;
+
+            if (TentacleTipRB2D.position == endOfJumpPosition)
+            {
+                HaventReachedEndJumpPosition = false;
+            }
+
+            return HaventReachedEndJumpPosition; 
         }
-        private void TentacleTip_JumpLeft(float xPositionUnitstoJump)
+        private void TentacleTip_JumpSideways(Vector2 whereToJumpTo)
         {
-            Vector2 currentPositionVector = new Vector2(TentacleTipRB2D.position.x - xPositionUnitstoJump, TentacleTipRB2D.position.y);
-            TentacleTipRB2D.position = currentPositionVector;
+
+            TentacleTipRB2D.position = Vector2.MoveTowards(TentacleTipRB2D.position, whereToJumpTo, Time.fixedDeltaTime * TTJumpSpeed);
+
         }
 
-        // called from fixed update, inside a state's ProcessState() method.
-        public void TT_JumpRight()
-        {
-            TentacleTip_JumpRight(TTJukePosRightAmount);
-        }
-        private void TentacleTip_JumpRight(float xPositionUnitstoJump)
-        {
-            Vector2 currentPositionVector = new Vector2(TentacleTipRB2D.position.x + xPositionUnitstoJump, TentacleTipRB2D.position.y);
-            TentacleTipRB2D.position = currentPositionVector;
-        }
-
+      
         public void PleaseStingTentacleSprite()
         {
             ChangeTentacleSpritetoSting();
@@ -430,6 +454,7 @@ namespace SwordClash
             TimesCanBarrelRoll = 2;
             TTJukePosLeftAmount = 1;
             TTJukePosRightAmount = 1;
+            TTJumpSpeed = 10.0f;
             TTTimesAllowedToJuke = 3;
         }
 

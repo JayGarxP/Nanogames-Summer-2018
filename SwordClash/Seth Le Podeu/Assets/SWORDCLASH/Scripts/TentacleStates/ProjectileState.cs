@@ -115,21 +115,21 @@ namespace SwordClash
             // check if tapping after checking if tapped out
             if (JukeCount < TentaControllerInstance.TTTimesAllowedToJuke)
             {
-                // if juke - right input received
-                if (InputFlagArray[(int)HotInputs.RudderRight])
-                {
-                    //TODO: make seperate jump methods for coiled jumps
-                    TentaControllerInstance.TT_JumpRight(); 
-                    InputFlagArray[(int)HotInputs.RudderRight] = false;
-                    ++JukeCount;
-                }
+                //// if juke - right input received
+                //if (InputFlagArray[(int)HotInputs.RudderRight])
+                //{
+                //    //TODO: make seperate jump methods for coiled jumps
+                //    TentaControllerInstance.TT_JumpRight(); 
+                //    InputFlagArray[(int)HotInputs.RudderRight] = false;
+                //    ++JukeCount;
+                //}
 
-                if (InputFlagArray[(int)HotInputs.RudderLeft])
-                {
-                    TentaControllerInstance.TT_JumpLeft();
-                    InputFlagArray[(int)HotInputs.RudderLeft] = false;
-                    ++JukeCount;
-                }
+                //if (InputFlagArray[(int)HotInputs.RudderLeft])
+                //{
+                //    TentaControllerInstance.TT_JumpLeft();
+                //    InputFlagArray[(int)HotInputs.RudderLeft] = false;
+                //    ++JukeCount;
+                //}
 
             }
 

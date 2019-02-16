@@ -16,9 +16,9 @@ public class ServerCallbacks : Bolt.GlobalEventListener
         var spawnPosition = new Vector3(-1.5f, -5.8f, 0);
 
         
-       // // instantiate cube; all BoltPrefabs are accessed through a static class
-       //BoltEntity playerOne = BoltNetwork.Instantiate(BoltPrefabs.TentacleTip_Scene, spawnPosition, Quaternion.identity);
-       // playerOne.TakeControl();
+       // instantiate cube; all BoltPrefabs are accessed through a static class
+       BoltEntity playerOne = BoltNetwork.Instantiate(BoltPrefabs.TentacleTipScene, spawnPosition, Quaternion.identity);
+        playerOne.TakeControl();
 }
 
 
@@ -27,9 +27,9 @@ public class ServerCallbacks : Bolt.GlobalEventListener
         var spawnPosition = new Vector3(-1.5f, 1.0f, 0);
 
         //// instantiate cube; all BoltPrefabs are accessed through a static class
-        //BoltEntity playerTwo = BoltNetwork.Instantiate(BoltPrefabs.TentacleTip_Scene, spawnPosition, Quaternion.identity);
-        //playerTwo.tag = "TentacleTipP2";
-        //playerTwo.AssignControl(connection);
+        BoltEntity playerTwo = BoltNetwork.Instantiate(BoltPrefabs.TentacleTipScene, spawnPosition, Quaternion.identity);
+        playerTwo.tag = "TentacleTipP2";
+        playerTwo.AssignControl(connection);
     }
 
     public override void Connected(BoltConnection connection)
