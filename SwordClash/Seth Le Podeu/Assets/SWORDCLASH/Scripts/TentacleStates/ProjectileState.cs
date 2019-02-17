@@ -1,13 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SwordClash
 {
     class ProjectileState : TentacleState
     {
+        // Can't do anything until finished with side-to-side movement
+        private bool CurrentlyJuking;
+        private Vector2 WhereJumpingTo;
+
+        private Vector2 SwipeVelocityVector;
+        private float SwipeAngle;
+        private short JukeCount;
+        private short BarrelRollCount;
+
         /// <summary>  
         ///  Constructor to Initialize this state with another, (transition from coiled probably)
         ///  <para> 
@@ -24,10 +29,10 @@ namespace SwordClash
         public ProjectileState(TentacleState oldState, Vector2 swipeNormalVector, float swipeAngle)
             : base(oldState.TentaControllerInstance)
         {
-            this.SwipeVelocityVector = swipeNormalVector;
-            this.SwipeAngle = swipeAngle;
-            this.BarrelRollCount = 0;
-            
+            SwipeVelocityVector = swipeNormalVector;
+            SwipeAngle = swipeAngle;
+            BarrelRollCount = 0;
+
             SwipeVelocityVector = MultiplyVectorComponentsBySpeed(
                 SwipeVelocityVector,
                 TentaControllerInstance.UPswipeSpeedConstant + TentaControllerInstance.UPswipeSpeedModifier
@@ -39,33 +44,30 @@ namespace SwordClash
         }
 
         // initialize from BarrelRollState which increments BrollCount as side-effect; BAD CODE
-        public ProjectileState(TentacleState oldState, Vector2 swipeVelocityVector, float swipeAngle, 
+        public ProjectileState(TentacleState oldState, Vector2 swipeVelocityVector, float swipeAngle,
             short BrollCount, short jukeCount)
             : base(oldState.TentaControllerInstance)
         {
-            this.SwipeVelocityVector = swipeVelocityVector;
-            this.SwipeAngle = swipeAngle;
+            SwipeVelocityVector = swipeVelocityVector;
+            SwipeAngle = swipeAngle;
             //check if in bad range here???
             //TODO: fix tight coupling of Moving and Barrel Roll state
-            this.BarrelRollCount = BrollCount;
+            BarrelRollCount = BrollCount;
             // BarrelRolling does NOT reset jukeCount
-            this.JukeCount = jukeCount;
+            JukeCount = jukeCount;
             OnStateEnter();
 
         }
 
-        private Vector2 SwipeVelocityVector;
-        private float SwipeAngle;
-        private short JukeCount;
-        private short BarrelRollCount;
-       
+
+
         // Lower all inputflags set times juked count to zero
         public override void OnStateEnter()
         {
             // Set actual tentacle movement vars, save the previous ones if needed
             //  not needed right now...
             LowerAllInputFlags();
-            
+
         }
 
         // Recoil Tentacle and lower all input flags.
@@ -100,52 +102,52 @@ namespace SwordClash
         // code summary here for projectile.processstate()
         public override void ProcessState()
         {
-            // Free to process here,
-            IsCurrentlyProcessing = false;
+            //// Free to process here,
+            //IsCurrentlyProcessing = false;
 
-            // Check if barrel roll flag and haven't already brolled too much
-            if ((BarrelRollCount < TentaControllerInstance.TimesCanBarrelRoll) &&
-                (InputFlagArray[(int)HotInputs.BarrelRoll]))
-            {
-                TentaControllerInstance.CurrentTentacleState = new BarrelRollState(this, SwipeVelocityVector,
-                    SwipeAngle, BarrelRollCount, JukeCount);
-            }
-            
+            //// Check if barrel roll flag and haven't already brolled too much
+            //if ((BarrelRollCount < TentaControllerInstance.TimesCanBarrelRoll) &&
+            //    (InputFlagArray[(int)HotInputs.BarrelRoll]))
+            //{
+            //    TentaControllerInstance.CurrentTentacleState = new BarrelRollState(this, SwipeVelocityVector,
+            //        SwipeAngle, BarrelRollCount, JukeCount);
+            //}
 
-            // check if tapping after checking if tapped out
-            if (JukeCount < TentaControllerInstance.TTTimesAllowedToJuke)
-            {
-                //// if juke - right input received
-                //if (InputFlagArray[(int)HotInputs.RudderRight])
-                //{
-                //    //TODO: make seperate jump methods for coiled jumps
-                //    TentaControllerInstance.TT_JumpRight(); 
-                //    InputFlagArray[(int)HotInputs.RudderRight] = false;
-                //    ++JukeCount;
-                //}
 
-                //if (InputFlagArray[(int)HotInputs.RudderLeft])
-                //{
-                //    TentaControllerInstance.TT_JumpLeft();
-                //    InputFlagArray[(int)HotInputs.RudderLeft] = false;
-                //    ++JukeCount;
-                //}
+            //// check if tapping after checking if tapped out
+            //if (JukeCount < TentaControllerInstance.TTTimesAllowedToJuke)
+            //{
+            //    //// if juke - right input received
+            //    //if (InputFlagArray[(int)HotInputs.RudderRight])
+            //    //{
+            //    //    //TODO: make seperate jump methods for coiled jumps
+            //    //    TentaControllerInstance.TT_JumpRight(); 
+            //    //    InputFlagArray[(int)HotInputs.RudderRight] = false;
+            //    //    ++JukeCount;
+            //    //}
 
-            }
+            //    //if (InputFlagArray[(int)HotInputs.RudderLeft])
+            //    //{
+            //    //    TentaControllerInstance.TT_JumpLeft();
+            //    //    InputFlagArray[(int)HotInputs.RudderLeft] = false;
+            //    //    ++JukeCount;
+            //    //}
 
-            // move tentacle tip
-            TentaControllerInstance.TT_MoveTentacleTip(SwipeVelocityVector, SwipeAngle);
+            //}
 
-            // Check if done moving
-            if (TentaControllerInstance.IsTentacleAtMaxExtension())
-            {
-                //TODO: Recovery mode state
-                
-                OnStateExit();
-                TentaControllerInstance.CurrentTentacleState = new CoiledState(this);
-            }
+            //// move tentacle tip
+            //TentaControllerInstance.TT_MoveTentacleTip(SwipeVelocityVector, SwipeAngle);
 
-            
+            //// Check if done moving
+            //if (TentaControllerInstance.IsTentacleAtMaxExtension())
+            //{
+            //    //TODO: Recovery mode state
+
+            //    OnStateExit();
+            //    TentaControllerInstance.CurrentTentacleState = new CoiledState(this);
+            //}
+
+
         }
 
         //private Vector2 MultiplyVectorYComponentBySpeed(Vector2 DirectionVector, float speed)
@@ -162,12 +164,78 @@ namespace SwordClash
 
         public override void ProcessState(ITentacleInputCommandInput input)
         {
-            throw new NotImplementedException();
+            // Free to process here,
+            IsCurrentlyProcessing = false;
+
+            // Check if barrel roll flag and haven't already brolled too much
+            if ((BarrelRollCount < TentaControllerInstance.TimesCanBarrelRoll) &&
+                (InputFlagArray[(int)HotInputs.BarrelRoll]))
+            {
+                input.BarrelRoll = true;
+            }
+
+
+            // check if tapping after checking if tapped out
+            if (JukeCount < TentaControllerInstance.TTTimesAllowedToJuke)
+            {
+                // if juke - right input received
+                if (InputFlagArray[(int)HotInputs.RudderRight])
+                {
+                    //TODO: make seperate jump methods for projectile jumps
+                    input.RightTap = true;
+                    InputFlagArray[(int)HotInputs.RudderRight] = false;
+                    ++JukeCount;
+                }
+
+                if (InputFlagArray[(int)HotInputs.RudderLeft])
+                {
+                    input.LeftTap = true;
+                    InputFlagArray[(int)HotInputs.RudderLeft] = false;
+                    ++JukeCount;
+                }
+
+            }
+
+            // move tentacle tip
+            TentaControllerInstance.TT_MoveTentacleTip(SwipeVelocityVector, SwipeAngle);
+
+            // Check if done moving
+            if (TentaControllerInstance.IsTentacleAtMaxExtension())
+            {
+                //TODO: Recovery mode state
+
+                OnStateExit();
+                TentaControllerInstance.CurrentTentacleState = new CoiledState(this);
+            }
+
         }
 
         public override void ProcessCommand(TentacleInputCommand command)
         {
-            throw new NotImplementedException();
+            if (CurrentlyJuking == false)
+            {
+                if (command.Input.BarrelRoll)
+                {
+                    TentaControllerInstance.CurrentTentacleState = new BarrelRollState(this, SwipeVelocityVector,
+                        SwipeAngle, BarrelRollCount, JukeCount);
+                }
+
+
+                // if juke input received, actaully juke using TentacleController callback method
+                if (command.Input.RightTap || command.Input.LeftTap)
+                {
+                    CurrentlyJuking = true;
+                    // false parameter to jump RIGHT, true parameter to jump LEFT
+                    WhereJumpingTo = TentaControllerInstance.TT_CalculateEndJumpPosition(command.Input.LeftTap);
+                    // Set CurrentlyJuking to true if still need to keep moving, when done juking set CurrentlyJuking to false
+                    CurrentlyJuking = TentaControllerInstance.TT_JumpSideways(WhereJumpingTo);
+                }
+            }
+            else
+            {
+                // Keep moving sideways
+                CurrentlyJuking = TentaControllerInstance.TT_JumpSideways(WhereJumpingTo);
+            }
         }
     }
 }

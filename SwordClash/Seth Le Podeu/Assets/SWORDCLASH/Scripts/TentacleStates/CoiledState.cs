@@ -103,14 +103,11 @@ namespace SwordClash
                 TentaControllerInstance.TTChangeTentacleSpritetoPlayerTwo();
             }
 
-
             // if player up-swipe, they tryna  *L A U N C H*
             if (InputFlagArray[(int)HotInputs.LaunchSwipe])
             {
-                //input.
-                //TentaControllerInstance.CurrentTentacleState = new ProjectileState(this,
-                //    TentaControllerInstance.TTMovePositionVelocityRequested,
-                //    TentaControllerInstance.TTMoveRotationAngleRequested);
+                input.UpSwipe = TentaControllerInstance.TTMovePositionVelocityRequested;
+               
             }
 
             // if juke-right input received, actaully juke right using TentacleController callback method
@@ -147,8 +144,21 @@ namespace SwordClash
                 //        TentaControllerInstance.TTMoveRotationAngleRequested);
                 //}
 
+                //input.
+                
 
-                // if juke-right input received, actaully juke right using TentacleController callback method
+                if (command.Input.UpSwipe != Vector3.zero)
+                {
+                    TentaControllerInstance.CurrentTentacleState = new ProjectileState(this,
+                        command.Input.UpSwipe,
+                        TentaControllerInstance.TTMoveRotationAngleRequested);
+
+                    InputFlagArray[(int)HotInputs.LaunchSwipe] = false;
+
+                }
+
+
+                // if juke input received, actaully juke using TentacleController callback method
                 if (command.Input.RightTap || command.Input.LeftTap)
                 {
                     CurrentlyJuking = true;
